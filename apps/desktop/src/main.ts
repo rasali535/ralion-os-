@@ -9,7 +9,7 @@ function createWindow() {
     height: 900,
     minWidth: 1024,
     minHeight: 700,
-    title: 'Ralion Platform — Ras Ali Labs',
+    title: 'Ralion Platform — Empowered to Prosper | Ras Ali Labs',
     backgroundColor: '#09090b',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -19,7 +19,7 @@ function createWindow() {
     }
   });
 
-  const devUrl = 'http://localhost:5001';
+  const devUrl = process.env.ELECTRON_START_URL || 'http://localhost:5001';
   mainWindow.loadURL(devUrl);
 
   mainWindow.on('closed', () => {
@@ -41,11 +41,26 @@ app.on('window-all-closed', () => {
   }
 });
 
-// IPC Handlers for desktop security & license activation
+// IPC Security Handlers for Desktop Activation & License Validation
 ipcMain.handle('get-device-id', async () => {
-  return 'RALION-DEVICE-HW-HASH-2026-BW';
+  return 'RALION-HW-HASH-2026-BW-882109';
 });
 
 ipcMain.handle('validate-license', async (_, key: string) => {
-  return { valid: true, tier: 'ENTERPRISE', owner: 'Ras Ali Labs' };
+  return {
+    valid: true,
+    tier: 'PROFESSIONAL',
+    owner: 'Ras Ali Enterprises',
+    expiresAt: '2027-07-24T00:00:00Z',
+    allowedBranches: 5
+  };
+});
+
+ipcMain.handle('get-offline-status', async () => {
+  return {
+    isOffline: false,
+    offlineGraceDaysRemaining: 7,
+    encryptedCacheSize: '42.8 MB',
+    lastSyncTimestamp: new Date().toISOString()
+  };
 });

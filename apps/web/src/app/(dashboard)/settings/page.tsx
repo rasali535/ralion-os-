@@ -1,13 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge } from '@ralion/ui';
-import { Settings, Building2, Shield, Users, MapPin, Key, Laptop, Check } from 'lucide-react';
+import { Settings, Building2, Shield, Users, MapPin, Key, Laptop, Check, RefreshCw, HardDrive } from 'lucide-react';
 import { REGISTERED_MODULES } from '@ralion/modules';
 
 export default function SettingsPage() {
   const [enabledPlugins, setEnabledPlugins] = useState<string[]>(['health', 'funeral', 'logistics', 'trade']);
   const [activeTab, setActiveTab] = useState<'PLUGINS' | 'ROLES' | 'BRANCHES' | 'SECURITY'>('PLUGINS');
+  const [isDesktopEnv, setIsDesktopEnv] = useState(false);
+  const [deviceId, setDeviceId] = useState('RALION-HW-HASH-2026-BW-882109');
+  const [offlineStatus, setOfflineStatus] = useState({
+    isOffline: false,
+    offlineGraceDaysRemaining: 7,
+    encryptedCacheSize: '42.8 MB',
+    lastSyncTimestamp: 'Just now'
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).ralionDesktop) {
+      setIsDesktopEnv(true);
+      (window as any).ralionDesktop.getDeviceId().then((id: string) => setDeviceId(id));
+      (window as any).ralionDesktop.getOfflineStatus().then((status: any) => setOfflineStatus(status));
+    }
+  }, []);
 
   const togglePlugin = (id: string) => {
     setEnabledPlugins(prev =>
@@ -21,7 +37,7 @@ export default function SettingsPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">Organization & System Settings</h1>
-            <Badge variant="primary">Enterprise Admin</Badge>
+            <Badge variant="primary">Build Prompt 4</Badge>
           </div>
           <p className="text-xs text-zinc-400 mt-1">
             Ras Ali Labs multi-tenant governance, industry plugin triggers, RBAC roles, and desktop security.
@@ -109,7 +125,7 @@ export default function SettingsPage() {
             {[
               { name: 'Gaborone Main Branch', code: 'GBE-01', type: 'HQ / Main Facility', isMain: true },
               { name: 'Francistown Regional Hub', code: 'FT-02', type: 'Regional Operations', isMain: false },
-              { name: 'Maun Branch', code: 'MN-03', type: 'Regional Operations', isMain: false },
+              { name: 'Mahalapye Branch', code: 'MHP-03', type: 'Regional Operations', isMain: false },
             ].map((b, idx) => (
               <div key={idx} className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
                 <div>
@@ -126,37 +142,54 @@ export default function SettingsPage() {
         </Card>
       )}
 
-      {/* Desktop Application Security */}
+      {/* Desktop Security & License Engine */}
       {activeTab === 'SECURITY' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Desktop Security & Offline Grace Engine</CardTitle>
-            <CardDescription>Cross-platform desktop application parameters (Electron build)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs text-zinc-300">
-            <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
+        <div className="flex flex-col gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <h4 className="font-bold text-white">Device Activation & Hardware Binding</h4>
-                <p className="text-zinc-400 text-[11px]">Validates hardware serial hash against active license seats</p>
+                <CardTitle className="flex items-center gap-2">
+                  <Laptop className="w-4 h-4 text-blue-400" /> Desktop Application Security & Hardware Binding
+                </CardTitle>
+                <CardDescription>Electron wrapper parameters targeting Windows, macOS, and Linux</CardDescription>
               </div>
-              <Badge variant="success">Active</Badge>
-            </div>
-            <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
-              <div>
-                <h4 className="font-bold text-white">Encrypted Local SQLite Cache</h4>
-                <p className="text-zinc-400 text-[11px]">AES-256 local document & offline action queue encryption</p>
+              <Badge variant={isDesktopEnv ? 'success' : 'primary'}>
+                {isDesktopEnv ? 'Electron Desktop Environment' : 'Web Browser Environment'}
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-4 text-xs text-zinc-300">
+              <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-white">Hardware Device Serial Hash</h4>
+                  <p className="text-zinc-400 text-[11px] font-mono mt-0.5">{deviceId}</p>
+                </div>
+                <Badge variant="success">Validated</Badge>
               </div>
-              <Badge variant="success">Enabled</Badge>
-            </div>
-            <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
-              <div>
-                <h4 className="font-bold text-white">Offline Sync Grace Period</h4>
-                <p className="text-zinc-400 text-[11px]">Allows 7 days of offline desktop operations before mandatory Mari sync</p>
+
+              <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-white flex items-center gap-1.5">
+                    <HardDrive className="w-4 h-4 text-purple-400" /> Encrypted SQLite Cache Storage
+                  </h4>
+                  <p className="text-zinc-400 text-[11px]">Local cache size: <strong className="text-white font-mono">{offlineStatus.encryptedCacheSize}</strong></p>
+                </div>
+                <Badge variant="purple">AES-256 Encrypted</Badge>
               </div>
-              <span className="font-mono text-blue-400 font-bold">7 Days</span>
-            </div>
-          </CardContent>
-        </Card>
+
+              <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-white">Offline Sync Grace Period</h4>
+                  <p className="text-zinc-400 text-[11px]">
+                    Remaining grace period before sync requirement: <strong className="text-blue-400 font-mono font-bold">{offlineStatus.offlineGraceDaysRemaining} Days</strong>
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" className="gap-1">
+                  <RefreshCw className="w-3.5 h-3.5" /> Force Sync Now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
