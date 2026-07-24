@@ -2,6 +2,7 @@ import React from 'react';
 import { 
   LayoutDashboard, 
   Users, 
+  UserCheck,
   CheckSquare, 
   Calendar, 
   Folder, 
@@ -16,7 +17,8 @@ import {
   Settings, 
   ChevronRight,
   Building2,
-  Bot
+  BarChart2,
+  Filter
 } from 'lucide-react';
 import { cn } from './utils';
 
@@ -42,7 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   orgName = "Enterprise Suite",
   onNavigate,
   onOpenMariAI,
-  enabledModules = ['mari', 'crm', 'tasks', 'calendar', 'documents', 'workflows', 'billing', 'growth', 'health', 'funeral', 'logistics', 'trade']
+  enabledModules = ['mari', 'customers', 'leads', 'crm', 'tasks', 'calendar', 'documents', 'reports', 'workflows', 'billing', 'growth', 'health', 'funeral', 'logistics', 'trade']
 }) => {
   const aiNav: SidebarItem[] = [
     { id: 'mari', label: 'Mari AI Workspace', href: '/mari-ai', icon: <Sparkles className="w-4 h-4 text-purple-400" />, badge: 'AI Hub' },
@@ -50,10 +52,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const coreNav: SidebarItem[] = [
     { id: 'dashboard', label: 'Dashboard', href: '/', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: 'crm', label: 'CRM & Deals', href: '/crm', icon: <Users className="w-4 h-4" /> },
-    { id: 'tasks', label: 'Tasks & Projects', href: '/tasks', icon: <CheckSquare className="w-4 h-4" /> },
+    { id: 'customers', label: 'Customers', href: '/customers', icon: <Users className="w-4 h-4 text-blue-400" /> },
+    { id: 'leads', label: 'Leads', href: '/leads', icon: <Filter className="w-4 h-4 text-amber-400" /> },
+    { id: 'crm', label: 'Sales Pipeline (CRM)', href: '/crm', icon: <UserCheck className="w-4 h-4" /> },
+    { id: 'tasks', label: 'Tasks', href: '/tasks', icon: <CheckSquare className="w-4 h-4" /> },
     { id: 'calendar', label: 'Calendar', href: '/calendar', icon: <Calendar className="w-4 h-4" /> },
     { id: 'documents', label: 'Documents', href: '/documents', icon: <Folder className="w-4 h-4" /> },
+    { id: 'reports', label: 'Reports', href: '/reports', icon: <BarChart2 className="w-4 h-4 text-emerald-400" /> },
     { id: 'workflows', label: 'No-Code Workflows', href: '/workflows', icon: <Zap className="w-4 h-4" /> },
     { id: 'billing', label: 'Billing & Licenses', href: '/billing', icon: <CreditCard className="w-4 h-4" /> },
   ];
@@ -102,10 +107,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="w-64 h-screen bg-zinc-950/95 border-r border-zinc-800/80 flex flex-col justify-between select-none">
-      <div className="p-4 flex flex-col gap-6 overflow-y-auto">
+    <aside className="w-64 h-screen bg-zinc-950/95 border-r border-zinc-800/80 flex flex-col justify-between select-none shrink-0">
+      <div className="p-4 flex flex-col gap-5 overflow-y-auto">
         {/* Brand Header */}
-        <div className="flex flex-col gap-1 border-b border-zinc-800/60 pb-4">
+        <div className="flex flex-col gap-1 border-b border-zinc-800/60 pb-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] tracking-widest font-black uppercase text-blue-400">RAS ALI LABS</span>
             <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400">v1.0</span>
