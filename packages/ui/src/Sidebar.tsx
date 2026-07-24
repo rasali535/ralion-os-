@@ -18,7 +18,8 @@ import {
   ChevronRight,
   Building2,
   BarChart2,
-  Filter
+  Filter,
+  Layers
 } from 'lucide-react';
 import { cn } from './utils';
 
@@ -44,10 +45,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   orgName = "Enterprise Suite",
   onNavigate,
   onOpenMariAI,
-  enabledModules = ['mari', 'customers', 'leads', 'crm', 'tasks', 'calendar', 'documents', 'reports', 'workflows', 'billing', 'growth', 'health', 'funeral', 'logistics', 'trade']
+  enabledModules = ['mari', 'demos', 'customers', 'leads', 'crm', 'tasks', 'calendar', 'documents', 'reports', 'workflows', 'billing', 'growth', 'health', 'funeral', 'logistics', 'trade']
 }) => {
   const aiNav: SidebarItem[] = [
     { id: 'mari', label: 'Mari AI Workspace', href: '/mari-ai', icon: <Sparkles className="w-4 h-4 text-purple-400" />, badge: 'AI Hub' },
+  ];
+
+  const demoNav: SidebarItem[] = [
+    { id: 'demos', label: 'Showcase Demos', href: '/demos', icon: <Layers className="w-4 h-4 text-purple-400" />, badge: 'Phase 1' },
   ];
 
   const coreNav: SidebarItem[] = [
@@ -68,9 +73,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const industryNav: SidebarItem[] = [
-    { id: 'health', label: 'Ralion Health', href: '/industry/health', icon: <HeartPulse className="w-4 h-4" />, isIndustryPlugin: true },
-    { id: 'funeral', label: 'Ralion Funeral', href: '/industry/funeral', icon: <Shield className="w-4 h-4" />, isIndustryPlugin: true },
-    { id: 'logistics', label: 'Ralion Logistics', href: '/industry/logistics', icon: <Truck className="w-4 h-4" />, isIndustryPlugin: true },
+    { id: 'health', label: 'Ralion Health (Pameltex)', href: '/industry/health', icon: <HeartPulse className="w-4 h-4" />, isIndustryPlugin: true },
+    { id: 'funeral', label: 'Ralion Funeral (Doves)', href: '/industry/funeral', icon: <Shield className="w-4 h-4" />, isIndustryPlugin: true },
+    { id: 'logistics', label: 'Ralion Logistics (DFS)', href: '/industry/logistics', icon: <Truck className="w-4 h-4" />, isIndustryPlugin: true },
     { id: 'trade', label: 'Ralion Trade', href: '/industry/trade', icon: <ShoppingBag className="w-4 h-4" />, isIndustryPlugin: true },
   ];
 
@@ -146,12 +151,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors" />
         </button>
 
-        {/* Mari AI Workspace Section */}
+        {/* Case Study Demos Section */}
         <div className="flex flex-col gap-1">
           <div className="px-3 text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">
-            Artificial Intelligence
+            Validation Demos
           </div>
-          {renderNavSection(aiNav)}
+          {renderNavSection(demoNav)}
         </div>
 
         {/* Core Modules Section */}
