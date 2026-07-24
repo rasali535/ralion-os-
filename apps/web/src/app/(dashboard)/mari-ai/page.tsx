@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Modal } from '@ralion/ui';
-import { Sparkles, Send, Bot, User, Zap, Database, FileText, CheckCircle2, ArrowRight, CornerDownLeft, RefreshCw } from 'lucide-react';
-import { processMariQuery, executeMariAction, mariKnowledgeManager, MariActionPayload } from '@ralion/ai';
+import { Sparkles, Send, Bot, User, Zap, Database, FileText, CheckCircle2, ArrowRight, CornerDownLeft, RefreshCw, Upload, Search, Plus } from 'lucide-react';
+import { processMariQuery, executeMariAction, mariKnowledgeManager, MariActionPayload, KnowledgeDocument } from '@ralion/ai';
 
 interface ChatMessage {
   id: string;
@@ -29,6 +29,13 @@ export default function MariAiPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [executedActions, setExecutedActions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'CHAT' | 'KNOWLEDGE' | 'ACTIONS'>('CHAT');
+
+  // Knowledge Base upload state
+  const [documentsList, setDocumentsList] = useState<KnowledgeDocument[]>(mariKnowledgeManager.getDocuments());
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [newDoc, setNewDoc] = useState({ title: '', category: 'SOP' as const, content: '' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<string>('');
 
   const promptSuggestions = [
     'Show me sales this month',
@@ -81,6 +88,20 @@ export default function MariAiPage() {
     }
   };
 
+  const handleUploadDoc = () => {
+    if (!newDoc.title || !newDoc.content) return;
+    const created = mariKnowledgeManager.addDocument(newDoc);
+    setDocumentsList([...mariKnowledgeManager.getDocuments()]);
+    setIsUploadModalOpen(false);
+    setNewDoc({ title: '', category: 'SOP', content: '' });
+  };
+
+  const handleTestSearch = () => {
+    if (!searchQuery.trim()) return;
+    const res = mariKnowledgeManager.searchKnowledgeBase(searchQuery);
+    setSearchResults(res);
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto h-[calc(100vh-6rem)]">
       {/* Header Bar */}
@@ -91,10 +112,10 @@ export default function MariAiPage() {
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <h1 className="text-2xl font-black tracking-tight text-white">Mari AI Platform Workspace</h1>
-            <Badge variant="purple" className="font-mono">Ras Ali AI Core v2.0</Badge>
+            <Badge variant="purple" className="font-mono">Build Prompt 3</Badge>
           </div>
           <p className="text-xs text-zinc-400 mt-1">
-            Multi-tenant RAG vector intelligence, natural language business queries, and Mari Action drivers.
+            Mari helps you make smarter decisions, automate daily tasks, and unlock new opportunities.
           </p>
         </div>
 
@@ -109,13 +130,13 @@ export default function MariAiPage() {
             onClick={() => setActiveTab('KNOWLEDGE')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${activeTab === 'KNOWLEDGE' ? 'bg-blue-600 text-white' : 'text-zinc-400'}`}
           >
-            RAG Knowledge Base
+            RAG Knowledge Base ({documentsList.length})
           </button>
           <button
             onClick={() => setActiveTab('ACTIONS')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${activeTab === 'ACTIONS' ? 'bg-blue-600 text-white' : 'text-zinc-400'}`}
           >
-            Mari Action Execution History
+            Mari Action Log ({executedActions.length})
           </button>
         </div>
       </div>
@@ -130,7 +151,7 @@ export default function MariAiPage() {
                 <Bot className="w-4 h-4 text-blue-400" />
                 <span className="text-xs font-bold text-white">Live Mari AI Conversation Thread</span>
               </div>
-              <Badge variant="success">AI/ML API Active</Badge>
+              <Badge variant="success">AI/ML API Active (37d9bb...)</Badge>
             </CardHeader>
 
             {/* Scrollable Chat */}
@@ -196,7 +217,6 @@ export default function MariAiPage() {
 
             {/* Input & Prompt Suggestions */}
             <div className="p-4 border-t border-zinc-800/80 bg-zinc-950/80 flex flex-col gap-3">
-              {/* Quick Prompt Suggestions */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider shrink-0 mr-1">Suggested:</span>
                 {promptSuggestions.map((prompt, idx) => (
@@ -210,7 +230,6 @@ export default function MariAiPage() {
                 ))}
               </div>
 
-              {/* Text Input Box */}
               <div className="relative">
                 <input
                   type="text"
@@ -242,16 +261,16 @@ export default function MariAiPage() {
               </CardHeader>
               <CardContent className="flex flex-col gap-3 text-xs">
                 <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
-                  <span className="text-zinc-400">Indexed Knowledge Documents</span>
-                  <span className="font-mono font-bold text-white">3 Documents</span>
+                  <span className="text-zinc-400">Indexed Documents</span>
+                  <span className="font-mono font-bold text-white">{documentsList.length} Documents</span>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
-                  <span className="text-zinc-400">Total RAG Vector Chunks</span>
-                  <span className="font-mono font-bold text-purple-400">4 Chunks</span>
+                  <span className="text-zinc-400">RAG Vector Chunks</span>
+                  <span className="font-mono font-bold text-purple-400">{documentsList.reduce((s, d) => s + d.chunkCount, 0)} Chunks</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-zinc-400">Semantic Search Model</span>
-                  <Badge variant="purple">GPT-4o Mini + Vectors</Badge>
+                  <Badge variant="purple">GPT-4o Mini + RAG</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -259,7 +278,7 @@ export default function MariAiPage() {
             <Card className="flex-1 overflow-y-auto">
               <CardHeader>
                 <CardTitle className="text-xs flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Executed Mari Actions
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Executed Mari Actions ({executedActions.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-2">
@@ -281,43 +300,78 @@ export default function MariAiPage() {
 
       {/* Knowledge Base Tab */}
       {activeTab === 'KNOWLEDGE' && (
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle>Organization RAG Knowledge Base</CardTitle>
-            <CardDescription>Upload SOPs, manuals, and policies for Mari AI contextual search</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-zinc-300">
-                <thead className="bg-zinc-900 border-b border-zinc-800 text-zinc-400 uppercase text-[10px] tracking-wider">
-                  <tr>
-                    <th className="p-4">Document Title</th>
-                    <th className="p-4">Category</th>
-                    <th className="p-4">Vector Chunks</th>
-                    <th className="p-4">Indexed Status</th>
-                    <th className="p-4">Created Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800/60">
-                  {mariKnowledgeManager.getDocuments().map((doc) => (
-                    <tr key={doc.id} className="hover:bg-zinc-800/40 transition-colors">
-                      <td className="p-4 font-bold text-white flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-purple-400" />
-                        {doc.title}
-                      </td>
-                      <td className="p-4 text-zinc-400">{doc.category}</td>
-                      <td className="p-4 font-mono text-purple-400">{doc.chunkCount} Chunks</td>
-                      <td className="p-4">
-                        <Badge variant="purple">Vector Indexed</Badge>
-                      </td>
-                      <td className="p-4 font-mono text-zinc-400">{doc.createdAt.split('T')[0]}</td>
+        <div className="flex flex-col gap-6 flex-1 min-h-0">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Organization RAG Knowledge Base</CardTitle>
+                <CardDescription>Upload company SOPs, manuals, and policies for Mari AI contextual search</CardDescription>
+              </div>
+              <Button variant="primary" size="sm" onClick={() => setIsUploadModalOpen(true)}>
+                <Plus className="w-4 h-4" /> Upload Knowledge Doc
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-zinc-300">
+                  <thead className="bg-zinc-900 border-b border-zinc-800 text-zinc-400 uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="p-4">Document Title</th>
+                      <th className="p-4">Category</th>
+                      <th className="p-4">Vector Chunks</th>
+                      <th className="p-4">Indexed Status</th>
+                      <th className="p-4">Created Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60">
+                    {documentsList.map((doc) => (
+                      <tr key={doc.id} className="hover:bg-zinc-800/40 transition-colors">
+                        <td className="p-4 font-bold text-white flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-purple-400" />
+                          {doc.title}
+                        </td>
+                        <td className="p-4 text-zinc-400">{doc.category}</td>
+                        <td className="p-4 font-mono text-purple-400">{doc.chunkCount} Chunks</td>
+                        <td className="p-4">
+                          <Badge variant="purple">Vector Indexed</Badge>
+                        </td>
+                        <td className="p-4 font-mono text-zinc-400">{doc.createdAt.split('T')[0]}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* RAG Vector Search Tester */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Search className="w-4 h-4 text-blue-400" /> Test Semantic RAG Vector Search
+              </CardTitle>
+              <CardDescription>Simulate vector retrieval over indexed company knowledge</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="e.g. 'What is the SLA uptime guarantee?' or 'Customs border procedure'"
+                  className="flex-1 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white"
+                />
+                <Button variant="primary" size="sm" onClick={handleTestSearch}>Search Vectors</Button>
+              </div>
+
+              {searchResults && (
+                <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-purple-300 whitespace-pre-wrap">
+                  {searchResults}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Action Logs Tab */}
@@ -342,6 +396,54 @@ export default function MariAiPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Document Upload Modal */}
+      <Modal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} title="Upload Organization Knowledge Document">
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="text-xs font-semibold text-zinc-300">Document Title</label>
+            <input
+              type="text"
+              value={newDoc.title}
+              onChange={(e) => setNewDoc({ ...newDoc, title: e.target.value })}
+              placeholder="e.g. Standard Operating Procedure for Client Intake"
+              className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-zinc-300">Category</label>
+            <select
+              value={newDoc.category}
+              onChange={(e) => setNewDoc({ ...newDoc, category: e.target.value as any })}
+              className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
+            >
+              <option value="SOP">Standard Operating Procedure (SOP)</option>
+              <option value="POLICY">Company Policy</option>
+              <option value="MANUAL">Manual / User Guide</option>
+              <option value="PRODUCT">Product Specification</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-zinc-300">Document Content (Text for Vector Chunking)</label>
+            <textarea
+              rows={5}
+              value={newDoc.content}
+              onChange={(e) => setNewDoc({ ...newDoc, content: e.target.value })}
+              placeholder="Paste full text of policy or manual..."
+              className="w-full mt-1 p-3 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
+            />
+          </div>
+
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setIsUploadModalOpen(false)}>Cancel</Button>
+            <Button variant="primary" size="sm" onClick={handleUploadDoc} className="bg-purple-600 hover:bg-purple-500 font-bold">
+              <Upload className="w-4 h-4" /> Index Vector & Save
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -49,12 +49,15 @@ export class MariKnowledgeManager {
     return this.documents;
   }
 
-  public addDocument(doc: Omit<KnowledgeDocument, 'id' | 'chunkCount' | 'vectorIndexed' | 'createdAt'>): KnowledgeDocument {
+  public addDocument(doc: { title: string; category: KnowledgeDocument['category']; content: string }): KnowledgeDocument {
     const chunks = chunkText(doc.content);
     const created: KnowledgeDocument = {
-      ...doc,
       id: `kb-${Date.now()}`,
-      chunkCount: chunks.length,
+      orgId: 'org-default',
+      title: doc.title,
+      category: doc.category,
+      content: doc.content,
+      chunkCount: Math.max(1, chunks.length),
       vectorIndexed: true,
       createdAt: new Date().toISOString()
     };
