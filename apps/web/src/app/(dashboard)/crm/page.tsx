@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Modal } from '@ralion/ui';
-import { Users, Plus, Search, Filter, Phone, Mail, DollarSign, Calendar, MessageSquare, Sparkles } from 'lucide-react';
+import { Users, Plus, Search, Filter, Phone, Mail, DollarSign, Calendar, MessageSquare, Sparkles, X, Clock, FileText, ChevronRight } from 'lucide-react';
 import { DEAL_STAGE_PROBABILITIES } from '@ralion/core';
 import { DealStage } from '@ralion/database';
 
@@ -16,22 +16,86 @@ interface ContactItem {
   dealValue: number;
   stage: DealStage;
   tags: string[];
+  aiLeadScore: number; // 0 - 100
+  timeline: Array<{ type: string; title: string; date: string; note: string }>;
 }
 
 const initialContacts: ContactItem[] = [
-  { id: '1', name: 'Lesedi Mokgosi', company: 'Kalahari Mining Ltd', email: 'lesedi@kalaharimining.bw', phone: '+267 71234567', type: 'CUSTOMER', dealValue: 45000, stage: 'PROPOSAL', tags: ['Enterprise', 'Botswana'] },
-  { id: '2', name: 'John Peterson', company: 'Apex Logistics Inc', email: 'j.peterson@apexlogistics.com', phone: '+1 415 892 1102', type: 'LEAD', dealValue: 28000, stage: 'QUALIFIED', tags: ['Logistics', 'SaaS'] },
-  { id: '3', name: 'Kagiso Tau', company: 'Gaborone Health Clinic', email: 'ktau@gaboronehealth.co.bw', phone: '+267 72112233', type: 'CUSTOMER', dealValue: 12500, stage: 'WON', tags: ['Health Plugin'] },
-  { id: '4', name: 'Sarah Jenkins', company: 'Global Trade Corp', email: 'sjenkins@globaltrade.io', phone: '+44 20 7946 0912', type: 'LEAD', dealValue: 62000, stage: 'NEGOTIATION', tags: ['Trade Plugin'] },
+  {
+    id: '1',
+    name: 'Lesedi Mokgosi',
+    company: 'Kalahari Mining Ltd',
+    email: 'lesedi@kalaharimining.bw',
+    phone: '+267 71234567',
+    type: 'CUSTOMER',
+    dealValue: 45000,
+    stage: 'PROPOSAL',
+    tags: ['Enterprise', 'Botswana'],
+    aiLeadScore: 92,
+    timeline: [
+      { type: 'CALL', title: 'Executive Demo Call', date: 'Jul 23, 2026', note: 'Reviewed enterprise SLA and Cloud SQL parameters with CTO.' },
+      { type: 'EMAIL', title: 'Proposal Sent', date: 'Jul 20, 2026', note: 'Sent $45k customized Professional subscription quote.' },
+      { type: 'NOTE', title: 'Initial Intake', date: 'Jul 15, 2026', note: 'Lead ingested via Mari AI landing form.' }
+    ]
+  },
+  {
+    id: '2',
+    name: 'John Peterson',
+    company: 'Apex Logistics Inc',
+    email: 'j.peterson@apexlogistics.com',
+    phone: '+1 415 892 1102',
+    type: 'LEAD',
+    dealValue: 28000,
+    stage: 'QUALIFIED',
+    tags: ['Logistics', 'SaaS'],
+    aiLeadScore: 78,
+    timeline: [
+      { type: 'EMAIL', title: 'Customs Workflow Query', date: 'Jul 22, 2026', note: 'Inquired about Ralion Logistics border clearance module.' }
+    ]
+  },
+  {
+    id: '3',
+    name: 'Kagiso Tau',
+    company: 'Gaborone Health Clinic',
+    email: 'ktau@gaboronehealth.co.bw',
+    phone: '+267 72112233',
+    type: 'CUSTOMER',
+    dealValue: 12500,
+    stage: 'WON',
+    tags: ['Health Plugin'],
+    aiLeadScore: 95,
+    timeline: [
+      { type: 'NOTE', title: 'Contract Signed', date: 'Jul 22, 2026', note: 'Activated Ralion Health clinical intake module.' }
+    ]
+  },
+  {
+    id: '4',
+    name: 'Sarah Jenkins',
+    company: 'Global Trade Corp',
+    email: 'sjenkins@globaltrade.io',
+    phone: '+44 20 7946 0912',
+    type: 'LEAD',
+    dealValue: 62000,
+    stage: 'NEGOTIATION',
+    tags: ['Trade Plugin'],
+    aiLeadScore: 84,
+    timeline: [
+      { type: 'CALL', title: 'Procurement Terms', date: 'Jul 21, 2026', note: 'Discussed B2B wholesale order marketplace integrations.' }
+    ]
+  },
 ];
 
 export default function CRMPage() {
   const [contacts, setContacts] = useState<ContactItem[]>(initialContacts);
   const [activeTab, setActiveTab] = useState<'PIPELINE' | 'CONTACTS'>('PIPELINE');
+  const [typeFilter, setTypeFilter] = useState<string>('ALL');
+  const [selectedContact, setSelectedContact] = useState<ContactItem | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newContact, setNewContact] = useState({ name: '', company: '', email: '', phone: '', dealValue: '10000', stage: 'LEAD' as DealStage });
 
   const pipelineStages: DealStage[] = ['LEAD', 'CONTACTED', 'QUALIFIED', 'PROPOSAL', 'NEGOTIATION', 'WON'];
+
+  const filteredContacts = contacts.filter(c => typeFilter === 'ALL' || c.type === typeFilter);
 
   const handleAddContact = () => {
     if (!newContact.name || !newContact.email) return;
@@ -44,7 +108,9 @@ export default function CRMPage() {
       type: 'LEAD',
       dealValue: parseFloat(newContact.dealValue) || 10000,
       stage: newContact.stage,
-      tags: ['New Lead']
+      tags: ['New Lead'],
+      aiLeadScore: 80,
+      timeline: [{ type: 'NOTE', title: 'Lead Ingested', date: 'Today', note: 'Added via CRM Lead Form' }]
     };
     setContacts(prev => [created, ...prev]);
     setIsAddModalOpen(false);
@@ -58,10 +124,10 @@ export default function CRMPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">Universal CRM & Sales Pipeline</h1>
-            <Badge variant="primary">Phase 1 Core</Badge>
+            <Badge variant="primary">Build Prompt 2</Badge>
           </div>
           <p className="text-xs text-zinc-400 mt-1">
-            Manage contacts, deal values, activity timelines, and sales funnels.
+            Ralion Business — Empowered to Prosper: Run your business smarter.
           </p>
         </div>
 
@@ -87,11 +153,29 @@ export default function CRMPage() {
         </div>
       </div>
 
+      {/* Filter Chips Bar */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+          <Filter className="w-3 h-3" /> Filter Type:
+        </span>
+        {['ALL', 'LEAD', 'CUSTOMER', 'SUPPLIER', 'PARTNER'].map((t) => (
+          <button
+            key={t}
+            onClick={() => setTypeFilter(t)}
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+              typeFilter === t ? 'bg-blue-600 text-white' : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white'
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
       {/* Sales Pipeline View */}
       {activeTab === 'PIPELINE' && (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3 overflow-x-auto pb-4">
           {pipelineStages.map((stage) => {
-            const stageDeals = contacts.filter(c => c.stage === stage);
+            const stageDeals = filteredContacts.filter(c => c.stage === stage);
             const totalStageValue = stageDeals.reduce((sum, d) => sum + d.dealValue, 0);
 
             return (
@@ -106,15 +190,22 @@ export default function CRMPage() {
 
                 <div className="flex flex-col gap-2.5">
                   {stageDeals.map((deal) => (
-                    <Card key={deal.id} className="p-3.5 hover:border-blue-500/50 cursor-pointer transition-all">
+                    <Card
+                      key={deal.id}
+                      onClick={() => setSelectedContact(deal)}
+                      className="p-3.5 hover:border-blue-500/50 cursor-pointer transition-all group"
+                    >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white">{deal.name}</span>
+                        <span className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors">{deal.name}</span>
                         <Badge variant="primary" className="text-[9px]">${(deal.dealValue / 1000).toFixed(0)}k</Badge>
                       </div>
                       <p className="text-[11px] text-zinc-400 mt-1">{deal.company}</p>
-                      <div className="mt-3 flex items-center justify-between text-[10px] text-zinc-500">
-                        <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-zinc-400" /> {deal.email.split('@')[0]}</span>
-                        <span className="font-mono text-blue-400">{DEAL_STAGE_PROBABILITIES[stage]}% win</span>
+                      
+                      <div className="mt-3 flex items-center justify-between text-[10px] text-zinc-500 border-t border-zinc-800/60 pt-2">
+                        <span className="flex items-center gap-1 font-mono text-purple-400">
+                          <Sparkles className="w-3 h-3" /> Mari AI: {deal.aiLeadScore}
+                        </span>
+                        <span className="font-mono text-blue-400 font-semibold">{DEAL_STAGE_PROBABILITIES[stage]}% win</span>
                       </div>
                     </Card>
                   ))}
@@ -146,19 +237,25 @@ export default function CRMPage() {
                     <th className="p-4">Company</th>
                     <th className="p-4">Email / Phone</th>
                     <th className="p-4">Type</th>
+                    <th className="p-4">Mari Lead Score</th>
                     <th className="p-4">Deal Stage</th>
                     <th className="p-4 text-right">Deal Value</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/60">
-                  {contacts.map((contact) => (
-                    <tr key={contact.id} className="hover:bg-zinc-800/40 transition-colors">
+                  {filteredContacts.map((contact) => (
+                    <tr
+                      key={contact.id}
+                      onClick={() => setSelectedContact(contact)}
+                      className="hover:bg-zinc-800/40 cursor-pointer transition-colors"
+                    >
                       <td className="p-4 font-bold text-white">{contact.name}</td>
                       <td className="p-4 text-zinc-300">{contact.company}</td>
                       <td className="p-4 text-zinc-400 font-mono">{contact.email} <br /><span className="text-[10px]">{contact.phone}</span></td>
                       <td className="p-4">
                         <Badge variant={contact.type === 'CUSTOMER' ? 'success' : 'primary'}>{contact.type}</Badge>
                       </td>
+                      <td className="p-4 font-mono font-bold text-purple-400">{contact.aiLeadScore}/100</td>
                       <td className="p-4">
                         <Badge variant="purple">{contact.stage}</Badge>
                       </td>
@@ -170,6 +267,74 @@ export default function CRMPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Slide-over Contact Detail & Activity Timeline Drawer */}
+      {selectedContact && (
+        <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-zinc-950/95 backdrop-blur-2xl border-l border-zinc-800 shadow-2xl z-50 flex flex-col justify-between animate-in slide-in-from-right duration-300">
+          <div className="p-5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                {selectedContact.name}
+                <Badge variant="primary">{selectedContact.type}</Badge>
+              </h2>
+              <p className="text-xs text-zinc-400">{selectedContact.company}</p>
+            </div>
+            <button
+              onClick={() => setSelectedContact(null)}
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex-1 p-5 overflow-y-auto flex flex-col gap-5">
+            {/* Contact Details Card */}
+            <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col gap-3">
+              <div className="flex items-center justify-between text-xs text-zinc-400">
+                <span>Email: <strong className="text-white font-mono">{selectedContact.email}</strong></span>
+                <span>Phone: <strong className="text-white font-mono">{selectedContact.phone}</strong></span>
+              </div>
+              <div className="flex items-center justify-between text-xs pt-2 border-t border-zinc-800/80">
+                <span>Pipeline Value: <strong className="text-emerald-400 font-mono font-bold">${selectedContact.dealValue.toLocaleString()}</strong></span>
+                <Badge variant="purple" className="gap-1">
+                  <Sparkles className="w-3 h-3" /> Mari Score: {selectedContact.aiLeadScore}/100
+                </Badge>
+              </div>
+            </div>
+
+            {/* Interaction Timeline Feed */}
+            <div className="flex flex-col gap-3">
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-blue-400" /> Customer Interaction Timeline
+              </h3>
+
+              {selectedContact.timeline.map((act, idx) => (
+                <div key={idx} className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col gap-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-white flex items-center gap-1.5">
+                      {act.type === 'CALL' && <Phone className="w-3 h-3 text-blue-400" />}
+                      {act.type === 'EMAIL' && <Mail className="w-3 h-3 text-purple-400" />}
+                      {act.type === 'NOTE' && <FileText className="w-3 h-3 text-emerald-400" />}
+                      {act.title}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 font-mono">{act.date}</span>
+                  </div>
+                  <p className="text-zinc-300 text-[11px] mt-1">{act.note}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-zinc-800 bg-zinc-900/60 flex items-center justify-between">
+            <Button variant="outline" size="sm" onClick={() => setSelectedContact(null)}>
+              Close
+            </Button>
+            <Button variant="primary" size="sm">
+              <Phone className="w-3.5 h-3.5" /> Log Call / Activity
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Add Contact Modal */}
