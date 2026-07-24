@@ -111,9 +111,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400">v1.0</span>
           </div>
           <h1 className="text-xl font-black text-white tracking-wider flex items-center gap-1.5">
-            RALION <span className="text-xs font-normal text-zinc-400">OS</span>
+            RALION
           </h1>
-          <div className="mt-1 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300">
+          <p className="text-[11px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 italic">
+            Empowered to Prosper
+          </p>
+          <div className="mt-2 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300">
             <Building2 className="w-3.5 h-3.5 text-zinc-500" />
             <span className="truncate font-medium">{orgName}</span>
           </div>
@@ -130,9 +133,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div className="text-left">
               <div className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors">
-                Mari AI Quick Drawer
+                Mari AI Assistant
               </div>
-              <div className="text-[10px] text-zinc-400">Quick business query</div>
+              <div className="text-[10px] text-zinc-400">Powered by Mari AI</div>
             </div>
           </div>
           <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors" />
