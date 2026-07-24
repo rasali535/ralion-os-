@@ -1,0 +1,20 @@
+{
+  "name": "@ralion/desktop",
+  "version": "1.0.0",
+  "description": "Ralion Platform Desktop Application by Ras Ali Labs",
+  "author": "Ras Ali Labs",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "electron": "^30.0.9",
+    "electron-builder": "^24.13.3",
+    "typescript": "^5.4.5",
+    "@types/node": "^20.14.2"
+  }
+}

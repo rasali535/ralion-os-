@@ -1,0 +1,36 @@
+{
+  "name": "ralion-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ralion Platform — AI-Powered Business Operating System by Ras Ali Labs",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "firebase/functions"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@ralion/web",
+    "build": "npm run build --workspaces --if-present",
+    "web:dev": "npm run dev --workspace=@ralion/web",
+    "web:build": "npm run build --workspace=@ralion/web",
+    "desktop:dev": "npm run dev --workspace=@ralion/desktop",
+    "desktop:build": "npm run build --workspace=@ralion/desktop",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "keywords": [
+    "ralion",
+    "ras-ali-labs",
+    "mari-ai",
+    "business-os",
+    "saas",
+    "electron",
+    "nextjs",
+    "firebase"
+  ],
+  "author": "Ras Ali Labs",
+  "license": "MIT",
+  "dependencies": {
+    "@dataconnect/generated": "file:src/dataconnect-generated"
+  }
+}

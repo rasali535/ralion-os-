@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return request.auth.token;
+    }
+
+    function isOrgMember(orgId) {
+      return isAuthenticated() && (
+        request.auth.token.orgId == orgId ||
+        request.auth.token.role == 'PLATFORM_ADMIN'
+      );
+    }
+
+    function isOrgAdmin(orgId) {
+      return isAuthenticated() && (
+        (request.auth.token.orgId == orgId && request.auth.token.role == 'ORGANIZATION_OWNER') ||
+        request.auth.token.role == 'PLATFORM_ADMIN'
+      );
+    }
+
+    // Platform Level Admin Collections
+    match /platform_settings/{settingId} {
+      allow read, write: if isAuthenticated() && request.auth.token.role == 'PLATFORM_ADMIN';
+    }
+
+    // Multi-tenant Organization Tree Isolation
+    match /organizations/{orgId} {
+      allow read: if isOrgMember(orgId);
+      allow write: if isOrgAdmin(orgId);
+
+      // Sub-collections inherit tenant orgId boundary
+      match /{allSubcollections=**} {
+        allow read: if isOrgMember(orgId);
+        allow write: if isOrgMember(orgId);
+      }
+    }
+  }
+}

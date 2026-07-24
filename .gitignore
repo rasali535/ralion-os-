@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local env files
+.env*.local
+.env
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Electron
+release/
+dist-electron/
+
+# OS metadata
+.DS_Store
+Thumbs.db
