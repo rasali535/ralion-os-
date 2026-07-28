@@ -19,7 +19,10 @@ import {
   Building2,
   BarChart2,
   Filter,
-  Layers
+  Layers,
+  Code,
+  Globe,
+  Store
 } from 'lucide-react';
 import { cn } from './utils';
 
@@ -45,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   orgName = "Enterprise Suite",
   onNavigate,
   onOpenMariAI,
-  enabledModules = ['mari', 'demos', 'customers', 'leads', 'crm', 'tasks', 'calendar', 'documents', 'reports', 'workflows', 'billing', 'growth', 'health', 'funeral', 'logistics', 'trade']
+  enabledModules = ['mari', 'demos', 'customers', 'leads', 'crm', 'tasks', 'calendar', 'documents', 'reports', 'workflows', 'billing', 'growth', 'health', 'funeral', 'logistics', 'trade', 'marketplace', 'developer', 'enterprise', 'government']
 }) => {
   const aiNav: SidebarItem[] = [
     { id: 'mari', label: 'Mari AI Workspace', href: '/ralion/mari-ai', icon: <Sparkles className="w-4 h-4 text-purple-400" />, badge: 'AI Hub' },
@@ -77,6 +80,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'funeral', label: 'Ralion Funeral (Doves)', href: '/ralion/industry/funeral', icon: <Shield className="w-4 h-4" />, isIndustryPlugin: true },
     { id: 'logistics', label: 'Ralion Logistics (DFS)', href: '/ralion/industry/logistics', icon: <Truck className="w-4 h-4" />, isIndustryPlugin: true },
     { id: 'trade', label: 'Ralion Trade', href: '/ralion/industry/trade', icon: <ShoppingBag className="w-4 h-4" />, isIndustryPlugin: true },
+  ];
+
+  const ecosystemNav: SidebarItem[] = [
+    { id: 'marketplace', label: 'Marketplace', href: '/ralion/marketplace', icon: <Store className="w-4 h-4 text-purple-400" /> },
+    { id: 'developer', label: 'Developer Platform', href: '/ralion/developer', icon: <Code className="w-4 h-4 text-blue-400" /> },
+    { id: 'enterprise', label: 'Enterprise SSO', href: '/ralion/enterprise', icon: <Shield className="w-4 h-4 text-emerald-400" /> },
+    { id: 'government', label: 'Government Edition', href: '/ralion/government', icon: <Globe className="w-4 h-4 text-amber-400" /> },
   ];
 
   const renderNavSection = (items: SidebarItem[]) => {
@@ -181,6 +191,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             Industry Plugins
           </div>
           {renderNavSection(industryNav)}
+        </div>
+
+        {/* Ecosystem Section */}
+        <div className="flex flex-col gap-1">
+          <div className="px-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+            Platform Ecosystem
+          </div>
+          {renderNavSection(ecosystemNav)}
         </div>
       </div>
 

@@ -2,368 +2,221 @@
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Modal } from '@ralion/ui';
-import { HeartPulse, Plus, FileText, Calendar, UserCheck, Activity, Download, Sparkles, X, User } from 'lucide-react';
-import { HealthRecord } from '@ralion/database';
-import { generateEnterpriseDocument } from '@ralion/core';
+import { Heart, Plus, Calendar, FileText, User, Clock, AlertTriangle, Sparkles, ChevronRight, Shield } from 'lucide-react';
 
-interface ExtendedHealthRecord extends HealthRecord {
-  wellnessScore: number;
-  emergencyContact: string;
-  notesHistory: Array<{ date: string; author: string; note: string }>;
+interface HealthClient {
+  id: string;
+  name: string;
+  phone: string;
+  intakeDate: string;
+  status: 'active' | 'inactive' | 'discharged';
+  professional: string;
+  nextAppointment?: string;
+  openCases: number;
 }
 
-const samplePameltexRecords: ExtendedHealthRecord[] = [
-  {
-    id: 'h1',
-    orgId: 'pameltex-healthcare',
-    createdBy: 'u-dr-lesedi',
-    createdAt: '2026-07-24',
-    updatedAt: '2026-07-24',
-    patientName: 'Thabo Motsumi',
-    dob: '1988-04-12',
-    gender: 'Male',
-    phone: '+267 71223344',
-    caseNotes: 'Patient experiencing mild anxiety; prescribed weekly counseling sessions.',
-    assessmentSummary: 'Physical health stable. Counseling score 84/100.',
-    nextAppointment: 'Jul 30, 2026',
-    wellnessScore: 84,
-    emergencyContact: 'Kagiso Motsumi (+267 71998877)',
-    notesHistory: [
-      { date: 'Jul 24, 2026', author: 'Dr. Lesedi Phiri', note: 'Initial clinical intake assessment complete. Baseline indicators normal.' },
-      { date: 'Jul 20, 2026', author: 'Nurse Mpho', note: 'Patient phone consultation intake.' }
-    ]
-  },
-  {
-    id: 'h2',
-    orgId: 'pameltex-healthcare',
-    createdBy: 'u-dr-lesedi',
-    createdAt: '2026-07-24',
-    updatedAt: '2026-07-24',
-    patientName: 'Mpho Khama',
-    dob: '1995-11-03',
-    gender: 'Female',
-    phone: '+267 72998877',
-    caseNotes: 'Initial wellness assessment intake complete.',
-    assessmentSummary: 'Normal baseline indicators.',
-    nextAppointment: 'Aug 04, 2026',
-    wellnessScore: 92,
-    emergencyContact: 'Tshepo Khama (+267 72110099)',
-    notesHistory: [
-      { date: 'Jul 22, 2026', author: 'Dr. Lesedi Phiri', note: 'Wellness intake evaluation. High compliance observed.' }
-    ]
-  },
+interface Appointment {
+  id: string;
+  clientName: string;
+  professional: string;
+  date: string;
+  time: string;
+  type: string;
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
+}
+
+const clients: HealthClient[] = [
+  { id: 'hc1', name: 'Boitumelo Tsheko', phone: '+267 71223344', intakeDate: 'Jul 2, 2026', status: 'active', professional: 'Dr. Lesego Moagi', nextAppointment: 'Jul 30, 2026', openCases: 1 },
+  { id: 'hc2', name: 'Kagiso Sithole', phone: '+267 72334455', intakeDate: 'Jun 15, 2026', status: 'active', professional: 'Counsellor Naledi Kgosi', nextAppointment: 'Jul 29, 2026', openCases: 2 },
+  { id: 'hc3', name: 'Mpho Dlamini', phone: '+267 73445566', intakeDate: 'May 20, 2026', status: 'active', professional: 'Dr. Lesego Moagi', nextAppointment: 'Aug 5, 2026', openCases: 1 },
+  { id: 'hc4', name: 'Refilwe Tau', phone: '+267 74556677', intakeDate: 'Apr 10, 2026', status: 'discharged', professional: 'Counsellor Naledi Kgosi', openCases: 0 },
 ];
 
-export default function HealthPluginPage() {
-  const [records, setRecords] = useState<ExtendedHealthRecord[]>(samplePameltexRecords);
-  const [selectedRecord, setSelectedRecord] = useState<ExtendedHealthRecord | null>(null);
-  const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
-  const [newPatient, setNewPatient] = useState({
-    patientName: '',
-    dob: '1990-01-01',
-    gender: 'Female',
-    phone: '+267 70000000',
-    caseNotes: '',
-    wellnessScore: '85',
-    emergencyContact: ''
-  });
+const appointments: Appointment[] = [
+  { id: 'a1', clientName: 'Kagiso Sithole', professional: 'Counsellor Naledi Kgosi', date: 'Jul 29, 2026', time: '10:00 AM', type: 'session', status: 'confirmed' },
+  { id: 'a2', clientName: 'Boitumelo Tsheko', professional: 'Dr. Lesego Moagi', date: 'Jul 30, 2026', time: '2:00 PM', type: 'follow_up', status: 'scheduled' },
+  { id: 'a3', clientName: 'Mpho Dlamini', professional: 'Dr. Lesego Moagi', date: 'Aug 5, 2026', time: '9:00 AM', type: 'assessment', status: 'scheduled' },
+];
 
-  const handleCreateIntake = () => {
-    if (!newPatient.patientName || !newPatient.caseNotes) return;
+export default function HealthPage() {
+  const [activeTab, setActiveTab] = useState<'CLIENTS' | 'APPOINTMENTS' | 'CASES' | 'MARI_AI'>('CLIENTS');
+  const [selectedClient, setSelectedClient] = useState<HealthClient | null>(null);
+  const [mariQuery, setMariQuery] = useState('');
+  const [mariResponse, setMariResponse] = useState('');
+  const [isAsking, setIsAsking] = useState(false);
 
-    const created: ExtendedHealthRecord = {
-      id: `h-${Date.now()}`,
-      orgId: 'pameltex-healthcare',
-      createdBy: 'u-admin',
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0],
-      patientName: newPatient.patientName,
-      dob: newPatient.dob,
-      gender: newPatient.gender,
-      phone: newPatient.phone,
-      caseNotes: newPatient.caseNotes,
-      assessmentSummary: `Physical & Mental Wellness Score ${newPatient.wellnessScore}/100`,
-      nextAppointment: 'Aug 10, 2026',
-      wellnessScore: parseInt(newPatient.wellnessScore) || 85,
-      emergencyContact: newPatient.emergencyContact || 'Not specified',
-      notesHistory: [
-        { date: 'Today', author: 'Clinical Intake Staff', note: newPatient.caseNotes }
-      ]
-    };
-
-    setRecords(prev => [created, ...prev]);
-    setIsIntakeModalOpen(false);
-    setNewPatient({ patientName: '', dob: '1990-01-01', gender: 'Female', phone: '+267 70000000', caseNotes: '', wellnessScore: '85', emergencyContact: '' });
-  };
-
-  const handleExportPDF = (record: ExtendedHealthRecord) => {
-    const docRes = generateEnterpriseDocument({
-      templateType: 'CLINICAL_INTAKE',
-      orgName: 'Pameltex Healthcare Services',
-      clientName: record.patientName,
-      clientEmail: record.phone,
-      items: [
-        { description: 'Clinical Patient Intake & Evaluation Session', qty: 1, unitPrice: 150 },
-        { description: 'Mental & Physical Wellness Assessment Pack', qty: 1, unitPrice: 250 }
-      ],
-      notes: `Clinical Case Notes:\n${record.caseNotes}\n\nEmergency Contact: ${record.emergencyContact}`
-    });
-
-    const element = document.createElement('a');
-    const file = new Blob([docRes.formattedText], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = docRes.fileName;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+  const handleMariAsk = () => {
+    if (!mariQuery.trim()) return;
+    setIsAsking(true);
+    setTimeout(() => {
+      setMariResponse(`🏥 Mari Health Analysis (Confidential):\n\n"${mariQuery}"\n\nSummary:\n\n3 of 4 active clients have appointments scheduled within the next 7 days.\n\nAttention required:\n• Kagiso Sithole: 2 open cases — next session tomorrow (Jul 29). Review progress notes before session.\n• Boitumelo Tsheko: 45 days since last documented case note update — recommend update before Jul 30 appointment.\n\nUpcoming this week:\n• Jul 29 — Kagiso Sithole (Counsellor Naledi Kgosi) — Session\n• Jul 30 — Boitumelo Tsheko (Dr. Lesego Moagi) — Follow-up\n\nRecommendation: Send appointment reminders today. Ensure informed consent forms are on file for all active clients.`);
+      setIsAsking(false);
+    }, 1000);
   };
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto">
-      {/* Header Banner */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">Ralion Health</h1>
-            <Badge variant="purple" className="gap-1 font-mono">
-              <HeartPulse className="w-3.5 h-3.5" /> Pameltex Client Module (Build Prompt 5)
-            </Badge>
+            <Badge variant="success">Clinical Module</Badge>
+            <div className="flex items-center gap-1 text-[10px] text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+              <Shield className="w-3 h-3" /> HIPAA-Ready
+            </div>
           </div>
-          <p className="text-xs text-zinc-400 mt-1">
-            Ralion Health — Empowered to Prosper: Better care through intelligent technology.
-          </p>
+          <p className="text-xs text-zinc-400 mt-1">Client management, appointments, case notes, and AI-assisted clinical insights.</p>
         </div>
-
-        <Button variant="primary" size="sm" onClick={() => setIsIntakeModalOpen(true)}>
-          <Plus className="w-4 h-4" /> New Clinical Patient Intake
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="primary" size="sm"><Plus className="w-4 h-4" /> New Client</Button>
+          <Button variant="outline" size="sm"><Calendar className="w-4 h-4" /> Schedule</Button>
+        </div>
       </div>
 
-      {/* Overview Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 bg-zinc-900 border-zinc-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase">Active Patients</span>
-            <UserCheck className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-bold text-white mt-2">{records.length}</div>
-          <p className="text-[10px] text-zinc-500 mt-1">Pameltex Healthcare Registry</p>
-        </Card>
-
-        <Card className="p-4 bg-zinc-900 border-zinc-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase">Average Wellness Score</span>
-            <Activity className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-2xl font-bold text-purple-400 mt-2">
-            {Math.round(records.reduce((s, r) => s + r.wellnessScore, 0) / records.length)}/100
-          </div>
-          <p className="text-[10px] text-zinc-500 mt-1">Mari AI Clinical Assessment Average</p>
-        </Card>
-
-        <Card className="p-4 bg-zinc-900 border-zinc-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase">Mari RAG Protocol</span>
-            <Sparkles className="w-4 h-4 text-blue-400" />
-          </div>
-          <div className="text-xs font-bold text-white mt-2">Pameltex Clinical Protocol v1</div>
-          <p className="text-[10px] text-zinc-500 mt-1">Vector Indexed for Mari AI</p>
-        </Card>
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: 'Active Clients', value: '3', icon: '👥' },
+          { label: 'Appointments This Week', value: '2', icon: '📅' },
+          { label: 'Open Cases', value: '4', icon: '📋' },
+          { label: 'Due Follow-Ups', value: '1', icon: '⚠️' },
+        ].map((s, i) => (
+          <Card key={i} className="p-4">
+            <div className="text-xl">{s.icon}</div>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mt-1">{s.label}</div>
+            <div className="text-2xl font-black text-white">{s.value}</div>
+          </Card>
+        ))}
       </div>
 
-      {/* Patient Records Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Pameltex Clinical Patient Records</CardTitle>
-          <CardDescription>Multi-tenant health records isolated for Pameltex Healthcare</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-zinc-300">
+      {/* Tabs */}
+      <div className="flex gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 w-fit">
+        {(['CLIENTS', 'APPOINTMENTS', 'CASES', 'MARI_AI'] as const).map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === tab ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-white'}`}>
+            {tab.replace('_', ' ')}
+          </button>
+        ))}
+      </div>
+
+      {/* Clients Tab */}
+      {activeTab === 'CLIENTS' && (
+        <Card>
+          <CardContent className="p-0">
+            <table className="w-full text-xs text-zinc-300">
               <thead className="bg-zinc-900 border-b border-zinc-800 text-zinc-400 uppercase text-[10px] tracking-wider">
                 <tr>
-                  <th className="p-4">Patient Name</th>
-                  <th className="p-4">DOB / Gender</th>
-                  <th className="p-4">Phone</th>
-                  <th className="p-4">Wellness Score</th>
-                  <th className="p-4">Clinical Case Notes</th>
-                  <th className="p-4">Next Appointment</th>
-                  <th className="p-4 text-right">Actions</th>
+                  <th className="p-4 text-left">Client</th>
+                  <th className="p-4 text-left">Assigned Professional</th>
+                  <th className="p-4 text-left">Intake Date</th>
+                  <th className="p-4 text-left">Next Appt</th>
+                  <th className="p-4 text-left">Status</th>
+                  <th className="p-4 text-left">Open Cases</th>
+                  <th className="p-4"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/60">
-                {records.map((rec) => (
-                  <tr
-                    key={rec.id}
-                    onClick={() => setSelectedRecord(rec)}
-                    className="hover:bg-zinc-800/40 cursor-pointer transition-colors"
-                  >
-                    <td className="p-4 font-bold text-white flex items-center gap-2">
-                      <UserCheck className="w-4 h-4 text-emerald-400" />
-                      {rec.patientName}
+                {clients.map(c => (
+                  <tr key={c.id} className="hover:bg-zinc-800/30 transition-colors cursor-pointer" onClick={() => setSelectedClient(c)}>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs">{c.name.charAt(0)}</div>
+                        <div>
+                          <div className="font-bold text-white">{c.name}</div>
+                          <div className="text-zinc-500 font-mono">{c.phone}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="p-4 text-zinc-400">{rec.dob} ({rec.gender})</td>
-                    <td className="p-4 font-mono text-zinc-300">{rec.phone}</td>
-                    <td className="p-4 font-mono font-bold text-purple-400">{rec.wellnessScore}/100</td>
-                    <td className="p-4 text-zinc-300 max-w-md">{rec.caseNotes}</td>
-                    <td className="p-4 font-mono text-blue-400">{rec.nextAppointment}</td>
-                    <td className="p-4 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleExportPDF(rec);
-                        }}
-                        className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white flex items-center gap-1 ml-auto text-[11px]"
-                      >
-                        <Download className="w-3.5 h-3.5" /> PDF Pack
-                      </button>
-                    </td>
+                    <td className="p-4 text-zinc-400">{c.professional}</td>
+                    <td className="p-4 text-zinc-400 font-mono">{c.intakeDate}</td>
+                    <td className="p-4 text-zinc-300 font-mono">{c.nextAppointment || '—'}</td>
+                    <td className="p-4"><Badge variant={c.status === 'active' ? 'success' : c.status === 'discharged' ? 'default' : 'warning'}>{c.status}</Badge></td>
+                    <td className="p-4 text-center font-bold text-white">{c.openCases}</td>
+                    <td className="p-4"><ChevronRight className="w-4 h-4 text-zinc-600" /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Patient Detail Drawer */}
-      {selectedRecord && (
-        <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-zinc-950/95 backdrop-blur-2xl border-l border-zinc-800 shadow-2xl z-50 flex flex-col justify-between animate-in slide-in-from-right duration-300">
-          <div className="p-5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60">
-            <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                {selectedRecord.patientName}
-                <Badge variant="purple">Score: {selectedRecord.wellnessScore}/100</Badge>
-              </h2>
-              <p className="text-xs text-zinc-400">Pameltex Healthcare Client Record</p>
-            </div>
-            <button
-              onClick={() => setSelectedRecord(null)}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex-1 p-5 overflow-y-auto flex flex-col gap-5">
-            <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col gap-2 text-xs">
-              <span className="text-zinc-400">DOB: <strong className="text-white">{selectedRecord.dob}</strong> ({selectedRecord.gender})</span>
-              <span className="text-zinc-400">Contact Phone: <strong className="text-white font-mono">{selectedRecord.phone}</strong></span>
-              <span className="text-zinc-400">Emergency Contact: <strong className="text-white font-mono">{selectedRecord.emergencyContact}</strong></span>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Clinical Progress Notes</h3>
-              {selectedRecord.notesHistory.map((n, idx) => (
-                <div key={idx} className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col gap-1 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-purple-400">{n.author}</span>
-                    <span className="text-[10px] text-zinc-500 font-mono">{n.date}</span>
+      {/* Appointments Tab */}
+      {activeTab === 'APPOINTMENTS' && (
+        <div className="flex flex-col gap-3">
+          {appointments.map(a => (
+            <Card key={a.id} className="p-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white text-sm">{a.clientName}</span>
+                    <Badge variant={a.status === 'confirmed' ? 'success' : a.status === 'completed' ? 'default' : 'primary'} className="text-[10px]">{a.status}</Badge>
                   </div>
-                  <p className="text-zinc-300 text-[11px] mt-1">{n.note}</p>
+                  <div className="text-[11px] text-zinc-400 mt-1">
+                    <span className="capitalize">{a.type.replace('_', ' ')}</span> · {a.professional}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-zinc-500">
+                    <Calendar className="w-3 h-3" /> {a.date}
+                    <Clock className="w-3 h-3 ml-1" /> {a.time}
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-4 border-t border-zinc-800 bg-zinc-900/60 flex items-center justify-between">
-            <Button variant="outline" size="sm" onClick={() => setSelectedRecord(null)}>Close</Button>
-            <Button variant="primary" size="sm" onClick={() => handleExportPDF(selectedRecord)}>
-              <Download className="w-3.5 h-3.5" /> Export PDF Record
-            </Button>
-          </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm">View Notes</Button>
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* New Patient Intake Modal */}
-      <Modal isOpen={isIntakeModalOpen} onClose={() => setIsIntakeModalOpen(false)} title="Pameltex Patient Intake Registration">
-        <div className="flex flex-col gap-4">
-          <div>
-            <label className="text-xs font-semibold text-zinc-300">Patient Full Name</label>
-            <input
-              type="text"
-              value={newPatient.patientName}
-              onChange={(e) => setNewPatient({ ...newPatient, patientName: e.target.value })}
-              placeholder="e.g. Boitumelo Phiri"
-              className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Date of Birth</label>
-              <input
-                type="date"
-                value={newPatient.dob}
-                onChange={(e) => setNewPatient({ ...newPatient, dob: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Gender</label>
-              <select
-                value={newPatient.gender}
-                onChange={(e) => setNewPatient({ ...newPatient, gender: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              >
-                <option value="Female">Female</option>
-                <option value="Male">Male</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Phone Number</label>
-              <input
-                type="text"
-                value={newPatient.phone}
-                onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Initial Wellness Score (0 - 100)</label>
-              <input
-                type="number"
-                value={newPatient.wellnessScore}
-                onChange={(e) => setNewPatient({ ...newPatient, wellnessScore: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-zinc-300">Emergency Contact</label>
-            <input
-              type="text"
-              value={newPatient.emergencyContact}
-              onChange={(e) => setNewPatient({ ...newPatient, emergencyContact: e.target.value })}
-              placeholder="Name & Phone"
-              className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-zinc-300">Clinical Case Intake Notes</label>
-            <textarea
-              rows={3}
-              value={newPatient.caseNotes}
-              onChange={(e) => setNewPatient({ ...newPatient, caseNotes: e.target.value })}
-              placeholder="Initial consultation observations..."
-              className="w-full mt-1 p-3 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-            />
-          </div>
-
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => setIsIntakeModalOpen(false)}>Cancel</Button>
-            <Button variant="primary" size="sm" onClick={handleCreateIntake} className="bg-purple-600 hover:bg-purple-500 font-bold">
-              Save Patient Intake
-            </Button>
-          </div>
+      {/* Cases Tab */}
+      {activeTab === 'CASES' && (
+        <div className="flex flex-col gap-3">
+          {clients.filter(c => c.openCases > 0).map(c => (
+            <Card key={c.id} className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-white text-sm">{c.name}</h3>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">{c.openCases} open case{c.openCases > 1 ? 's' : ''} · Assigned to {c.professional}</p>
+                </div>
+                <Button variant="outline" size="sm">View Cases</Button>
+              </div>
+            </Card>
+          ))}
         </div>
-      </Modal>
+      )}
+
+      {/* Mari AI Tab */}
+      {activeTab === 'MARI_AI' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 text-white"><Sparkles className="w-4 h-4" /></div>
+                <div><CardTitle>Mari Health Intelligence</CardTitle><CardDescription>Clinical insights — permission restricted</CardDescription></div>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-400">
+                <Shield className="w-3.5 h-3.5" /> Access restricted to assigned professionals only
+              </div>
+              {['Summarize today\'s client schedule', 'Which clients need follow-up?', 'List overdue case note updates', 'Generate session reminder messages'].map((p, i) => (
+                <button key={i} onClick={() => setMariQuery(p)} className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400 hover:text-white text-left transition-all">{p}</button>
+              ))}
+              <textarea rows={2} value={mariQuery} onChange={e => setMariQuery(e.target.value)} placeholder="Ask Mari about your clients and schedule..." className="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 resize-none" />
+              <Button variant="primary" size="sm" onClick={handleMariAsk} className="w-full justify-center">
+                {isAsking ? 'Analysing...' : <><Sparkles className="w-3.5 h-3.5" /> Ask Mari</>}
+              </Button>
+            </CardContent>
+          </Card>
+          {mariResponse && (
+            <Card>
+              <CardHeader><CardTitle className="text-sm">Mari Clinical Report (Confidential)</CardTitle></CardHeader>
+              <CardContent><pre className="text-[11px] text-zinc-300 whitespace-pre-wrap leading-relaxed">{mariResponse}</pre></CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 }

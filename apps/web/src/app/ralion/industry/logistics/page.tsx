@@ -2,272 +2,275 @@
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Modal } from '@ralion/ui';
-import { Truck, Plus, FileText, MapPin, CheckCircle2, Shield, Download, Sparkles, AlertTriangle } from 'lucide-react';
-import { LogisticsShipment } from '@ralion/database';
-import { generateEnterpriseDocument } from '@ralion/core';
+import { Truck, Plus, MapPin, User, AlertTriangle, CheckCircle2, Clock, Package, Sparkles, FileText, ChevronRight } from 'lucide-react';
 
-interface ExtendedShipment extends LogisticsShipment {
-  driverName: string;
-  vehicleReg: string;
-  weightKg: number;
+interface Vehicle {
+  id: string;
+  registration: string;
+  make: string;
+  model: string;
+  type: string;
+  status: 'active' | 'maintenance' | 'unavailable';
+  driver: string;
 }
 
-const sampleDfsShipments: ExtendedShipment[] = [
-  {
-    id: 's1',
-    orgId: 'dfs-group-logistics',
-    createdBy: 'u-dfs-dispatcher',
-    createdAt: '2026-07-24',
-    updatedAt: '2026-07-24',
-    trackingNumber: 'DFS-TRK-9901',
-    origin: 'Gaborone HQ Depot',
-    destination: 'Pioneer Border Post (Lobatse)',
-    status: 'IN_TRANSIT',
-    driverName: 'Emanuel Ndlovu',
-    vehicleReg: 'B 412 ABN (Volvo FH16 Truck)',
-    weightKg: 24500,
-    customsCleared: true
-  },
-  {
-    id: 's2',
-    orgId: 'dfs-group-logistics',
-    createdBy: 'u-dfs-dispatcher',
-    createdAt: '2026-07-23',
-    updatedAt: '2026-07-23',
-    trackingNumber: 'DFS-TRK-9898',
-    origin: 'Francistown Hub',
-    destination: 'Kazungula Border Bridge',
-    status: 'CUSTOMS_HOLD',
-    driverName: 'Kagiso Phiri',
-    vehicleReg: 'B 890 BCD (Scania R500)',
-    weightKg: 18200,
-    customsCleared: false
-  }
+interface Driver {
+  id: string;
+  name: string;
+  phone: string;
+  licenseExpiry: string;
+  status: 'active' | 'off_duty';
+  deliveries: number;
+  rating: number;
+}
+
+interface Shipment {
+  id: string;
+  trackingNumber: string;
+  customer: string;
+  origin: string;
+  destination: string;
+  status: 'created' | 'in_transit' | 'at_customs' | 'customs_cleared' | 'delivered';
+  driver: string;
+  vehicle: string;
+  weightKg: number;
+  customsCleared: boolean;
+}
+
+const vehicles: Vehicle[] = [
+  { id: 'v1', registration: 'B 412 ABN', make: 'Volvo', model: 'FH16', type: 'truck', status: 'active', driver: 'Emanuel Ndlovu' },
+  { id: 'v2', registration: 'B 887 CDF', make: 'Mercedes', model: 'Actros', type: 'truck', status: 'active', driver: 'Thabo Mokoena' },
+  { id: 'v3', registration: 'B 101 XYZ', make: 'Isuzu', model: 'NPR', type: 'van', status: 'maintenance', driver: 'Unassigned' },
 ];
 
-export default function LogisticsPluginPage() {
-  const [shipments, setShipments] = useState<ExtendedShipment[]>(sampleDfsShipments);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newShipment, setNewShipment] = useState({
-    origin: 'Gaborone HQ Depot',
-    destination: 'Pioneer Border Post',
-    driverName: 'Emanuel Ndlovu',
-    vehicleReg: 'B 412 ABN',
-    weightKg: '20000'
-  });
+const drivers: Driver[] = [
+  { id: 'd1', name: 'Emanuel Ndlovu', phone: '+267 73556677', licenseExpiry: '2027-03-15', status: 'active', deliveries: 248, rating: 4.8 },
+  { id: 'd2', name: 'Thabo Mokoena', phone: '+267 71223344', licenseExpiry: '2026-11-20', status: 'active', deliveries: 195, rating: 4.6 },
+  { id: 'd3', name: 'Kefilwe Sello', phone: '+267 72334455', licenseExpiry: '2028-01-08', status: 'off_duty', deliveries: 122, rating: 4.9 },
+];
 
-  const handleCreateShipment = () => {
-    if (!newShipment.origin || !newShipment.destination) return;
-    const created: ExtendedShipment = {
-      id: `s-${Date.now()}`,
-      orgId: 'dfs-group-logistics',
-      createdBy: 'u-admin',
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0],
-      trackingNumber: `DFS-TRK-${Math.floor(1000 + Math.random() * 9000)}`,
-      origin: newShipment.origin,
-      destination: newShipment.destination,
-      status: 'DISPATCHED',
-      driverName: newShipment.driverName,
-      vehicleReg: newShipment.vehicleReg,
-      weightKg: parseFloat(newShipment.weightKg) || 20000,
-      customsCleared: true
-    };
-    setShipments(prev => [created, ...prev]);
-    setIsModalOpen(false);
-  };
+const shipments: Shipment[] = [
+  { id: 's1', trackingNumber: 'SHP-9901AB', customer: 'Kalahari Mining Ltd', origin: 'Gaborone Depot', destination: 'Pioneer Border Post', status: 'in_transit', driver: 'Emanuel Ndlovu', vehicle: 'B 412 ABN', weightKg: 24500, customsCleared: false },
+  { id: 's2', trackingNumber: 'SHP-9902CD', customer: 'Smith & Co Enterprises', origin: 'Lobatse Warehouse', destination: 'Johannesburg Hub', status: 'customs_cleared', driver: 'Thabo Mokoena', vehicle: 'B 887 CDF', weightKg: 8200, customsCleared: true },
+  { id: 's3', trackingNumber: 'SHP-9903EF', customer: 'TransAfrica Freight', origin: 'Francistown Depot', destination: 'Kazungula Border', status: 'delivered', driver: 'Emanuel Ndlovu', vehicle: 'B 412 ABN', weightKg: 16000, customsCleared: true },
+];
 
-  const handleExportPDF = (s: ExtendedShipment) => {
-    const docRes = generateEnterpriseDocument({
-      templateType: 'TRANSPORT_MANIFEST',
-      orgName: 'DFS Group Freight & Logistics',
-      clientName: s.driverName,
-      clientEmail: s.vehicleReg,
-      items: [
-        { description: `Cross Border Haulage Cargo (${s.origin} → ${s.destination})`, qty: 1, unitPrice: 4800 }
-      ],
-      notes: `Tracking Number: ${s.trackingNumber}\nVehicle Reg: ${s.vehicleReg}\nCargo Weight: ${s.weightKg} kg\nCustoms Status: ${s.customsCleared ? 'CLEARED' : 'CUSTOMS HOLD'}`
-    });
+const statusConfig: Record<string, { label: string; badge: any }> = {
+  created: { label: 'Created', badge: 'default' },
+  in_transit: { label: 'In Transit', badge: 'primary' },
+  at_customs: { label: 'At Customs', badge: 'warning' },
+  customs_cleared: { label: 'Cleared', badge: 'success' },
+  delivered: { label: 'Delivered', badge: 'success' },
+};
 
-    const element = document.createElement('a');
-    const file = new Blob([docRes.formattedText], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = docRes.fileName;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+export default function LogisticsPage() {
+  const [activeTab, setActiveTab] = useState<'SHIPMENTS' | 'FLEET' | 'DRIVERS' | 'MARI_AI'>('SHIPMENTS');
+  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [mariQuery, setMariQuery] = useState('');
+  const [mariResponse, setMariResponse] = useState('');
+  const [isAsking, setIsAsking] = useState(false);
+
+  const handleMariAsk = () => {
+    if (!mariQuery.trim()) return;
+    setIsAsking(true);
+    setTimeout(() => {
+      setMariResponse(`📦 Mari Logistics Analysis:\n\n"${mariQuery}"\n\nFleet Status: 2 of 3 vehicles are active. Vehicle B 101 XYZ is in scheduled maintenance — estimated return: 2 days.\n\nActive Shipments: 2 in transit. SHP-9901AB is approaching Pioneer Border Post and customs documents need verification.\n\n⚠️ Alert: SHP-9901AB customs clearance not yet confirmed. Recommend contacting Emanuel Ndlovu for document status.\n\nRecommendation: Schedule vehicle B 101 XYZ maintenance follow-up for Jul 30 and assign Kefilwe Sello (off-duty) to cover upcoming Kazungula shipment on Aug 2.`);
+      setIsAsking(false);
+    }, 1000);
   };
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto">
-      {/* Header Bar */}
-      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">Ralion Logistics</h1>
-            <Badge variant="success" className="gap-1 font-mono">
-              <Truck className="w-3.5 h-3.5" /> DFS Group Demo (Build Prompt 5)
-            </Badge>
+            <Badge variant="primary">Fleet & Shipments</Badge>
           </div>
-          <p className="text-xs text-zinc-400 mt-1">
-            Ralion Logistics — Empowered to Prosper: Move business forward.
-          </p>
+          <p className="text-xs text-zinc-400 mt-1">Fleet management, shipment tracking, customs, and AI document intelligence.</p>
         </div>
-
-        <Button variant="primary" size="sm" onClick={() => setIsModalOpen(true)}>
-          <Plus className="w-4 h-4" /> Create Fleet Shipment
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="primary" size="sm"><Plus className="w-4 h-4" /> New Shipment</Button>
+        </div>
       </div>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 bg-zinc-900 border-zinc-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase">Active Fleet Cargo</span>
-            <Truck className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-bold text-white mt-2">{shipments.length} Shipments</div>
-          <p className="text-[10px] text-zinc-500 mt-1">DFS Group Logistics Registry</p>
-        </Card>
-
-        <Card className="p-4 bg-zinc-900 border-zinc-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase">Customs Clearance</span>
-            <Shield className="w-4 h-4 text-blue-400" />
-          </div>
-          <div className="text-2xl font-bold text-blue-400 mt-2">
-            {shipments.filter(s => s.customsCleared).length} / {shipments.length} Cleared
-          </div>
-          <p className="text-[10px] text-zinc-500 mt-1">Pioneer & Kazungula Border Posts</p>
-        </Card>
-
-        <Card className="p-4 bg-zinc-900 border-zinc-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase">Total Fleet Tonnage</span>
-            <FileText className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-2xl font-bold text-purple-400 mt-2">
-            {(shipments.reduce((s, sh) => s + sh.weightKg, 0) / 1000).toFixed(1)} Tons
-          </div>
-          <p className="text-[10px] text-zinc-500 mt-1">Total Cross-Border Cargo Weight</p>
-        </Card>
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: 'Active Vehicles', value: '2/3', icon: '🚛', color: 'emerald' },
+          { label: 'Active Drivers', value: '2/3', icon: '👤', color: 'blue' },
+          { label: 'In Transit', value: '2', icon: '📦', color: 'amber' },
+          { label: 'Delivered Today', value: '1', icon: '✅', color: 'emerald' },
+        ].map((s, i) => (
+          <Card key={i} className="p-4">
+            <div className="text-xl">{s.icon}</div>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mt-1">{s.label}</div>
+            <div className="text-2xl font-black text-white">{s.value}</div>
+          </Card>
+        ))}
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>DFS Group Shipment Tracking Registry</CardTitle>
-          <CardDescription>Live fleet positions, driver identification, and border customs clearance</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-zinc-300">
+      {/* Tabs */}
+      <div className="flex gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 w-fit">
+        {(['SHIPMENTS', 'FLEET', 'DRIVERS', 'MARI_AI'] as const).map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === tab ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-white'}`}>
+            {tab.replace('_', ' ')}
+          </button>
+        ))}
+      </div>
+
+      {/* Shipments Tab */}
+      {activeTab === 'SHIPMENTS' && (
+        <div className="flex flex-col gap-3">
+          {shipments.map(s => (
+            <Card key={s.id} className="p-5 cursor-pointer hover:border-blue-500/30 transition-all" onClick={() => setSelectedShipment(s)}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono text-xs font-bold text-blue-400">{s.trackingNumber}</span>
+                    <Badge variant={statusConfig[s.status]?.badge}>{statusConfig[s.status]?.label}</Badge>
+                    {!s.customsCleared && s.status !== 'delivered' && (
+                      <span className="flex items-center gap-1 text-[10px] text-amber-400"><AlertTriangle className="w-3 h-3" /> Customs Pending</span>
+                    )}
+                  </div>
+                  <h3 className="font-bold text-white text-sm">{s.customer}</h3>
+                  <div className="flex items-center gap-2 text-[11px] text-zinc-400 mt-1">
+                    <MapPin className="w-3 h-3 text-zinc-600" /> {s.origin} → {s.destination}
+                  </div>
+                  <div className="flex items-center gap-4 mt-2 text-[10px] text-zinc-500">
+                    <span>🚛 {s.vehicle}</span>
+                    <span>👤 {s.driver}</span>
+                    <span>⚖️ {s.weightKg.toLocaleString()} kg</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-600 mt-1" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Fleet Tab */}
+      {activeTab === 'FLEET' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {vehicles.map(v => (
+            <Card key={v.id} className="p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-sm font-black text-white">{v.registration}</span>
+                <Badge variant={v.status === 'active' ? 'success' : v.status === 'maintenance' ? 'warning' : 'default'}>{v.status}</Badge>
+              </div>
+              <div className="text-xs text-zinc-400">
+                <div className="font-bold text-zinc-200">{v.make} {v.model}</div>
+                <div className="mt-1 capitalize text-zinc-500">{v.type}</div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-zinc-800/60 text-[11px] text-zinc-400 flex items-center gap-1">
+                <User className="w-3 h-3 text-blue-400" /> {v.driver}
+              </div>
+            </Card>
+          ))}
+          <button className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-dashed border-zinc-800 text-zinc-600 hover:text-zinc-400 transition-all">
+            <Plus className="w-6 h-6" />
+            <span className="text-xs">Add Vehicle</span>
+          </button>
+        </div>
+      )}
+
+      {/* Drivers Tab */}
+      {activeTab === 'DRIVERS' && (
+        <Card>
+          <CardContent className="p-0">
+            <table className="w-full text-xs text-zinc-300">
               <thead className="bg-zinc-900 border-b border-zinc-800 text-zinc-400 uppercase text-[10px] tracking-wider">
                 <tr>
-                  <th className="p-4">Tracking #</th>
-                  <th className="p-4">Route (Origin → Destination)</th>
-                  <th className="p-4">Driver & Vehicle</th>
-                  <th className="p-4">Weight (kg)</th>
-                  <th className="p-4">Customs Status</th>
-                  <th className="p-4">Shipment Status</th>
-                  <th className="p-4 text-right">Action</th>
+                  <th className="p-4 text-left">Driver</th>
+                  <th className="p-4 text-left">Phone</th>
+                  <th className="p-4 text-left">License Expiry</th>
+                  <th className="p-4 text-left">Status</th>
+                  <th className="p-4 text-left">Deliveries</th>
+                  <th className="p-4 text-left">Rating</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/60">
-                {shipments.map((s) => (
-                  <tr key={s.id} className="hover:bg-zinc-800/40 transition-colors">
-                    <td className="p-4 font-mono font-bold text-blue-400">{s.trackingNumber}</td>
-                    <td className="p-4 font-bold text-white">{s.origin} → {s.destination}</td>
-                    <td className="p-4 text-zinc-300">{s.driverName} <br /><span className="text-[10px] font-mono text-zinc-500">{s.vehicleReg}</span></td>
-                    <td className="p-4 font-mono text-zinc-300">{s.weightKg.toLocaleString()} kg</td>
-                    <td className="p-4">
-                      {s.customsCleared ? (
-                        <Badge variant="success">Cleared</Badge>
-                      ) : (
-                        <Badge variant="danger" className="gap-1">
-                          <AlertTriangle className="w-3 h-3" /> Customs Hold
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <Badge variant="purple">{s.status}</Badge>
-                    </td>
-                    <td className="p-4 text-right">
-                      <button
-                        onClick={() => handleExportPDF(s)}
-                        className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white flex items-center gap-1 ml-auto text-[11px]"
-                      >
-                        <Download className="w-3.5 h-3.5" /> Manifest PDF
-                      </button>
-                    </td>
+                {drivers.map(d => (
+                  <tr key={d.id} className="hover:bg-zinc-800/30 transition-colors">
+                    <td className="p-4 font-bold text-white">{d.name}</td>
+                    <td className="p-4 text-zinc-400 font-mono">{d.phone}</td>
+                    <td className="p-4 text-zinc-400 font-mono">{d.licenseExpiry}</td>
+                    <td className="p-4"><Badge variant={d.status === 'active' ? 'success' : 'default'}>{d.status}</Badge></td>
+                    <td className="p-4 text-zinc-300">{d.deliveries}</td>
+                    <td className="p-4 text-amber-400 font-bold">⭐ {d.rating}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="DFS Group Fleet Shipment Dispatch">
-        <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
+      {/* Mari AI Tab */}
+      {activeTab === 'MARI_AI' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 text-white"><Sparkles className="w-4 h-4" /></div>
+                <div><CardTitle>Mari Logistics Intelligence</CardTitle><CardDescription>Ask about fleet, shipments, customs, documents</CardDescription></div>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {['Check fleet status', 'Which shipments need customs clearance?', 'Who is the best performing driver?', 'Verify document completeness for SHP-9901AB'].map((p, i) => (
+                <button key={i} onClick={() => setMariQuery(p)} className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400 hover:text-white text-left transition-all">{p}</button>
+              ))}
+              <textarea rows={2} value={mariQuery} onChange={e => setMariQuery(e.target.value)} placeholder="Ask Mari about your logistics operations..." className="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 resize-none" />
+              <Button variant="primary" size="sm" onClick={handleMariAsk} className="w-full justify-center">
+                {isAsking ? 'Analysing...' : <><Sparkles className="w-3.5 h-3.5" /> Ask Mari</>}
+              </Button>
+            </CardContent>
+          </Card>
+          {mariResponse && (
+            <Card>
+              <CardHeader><CardTitle className="text-sm">Mari Logistics Report</CardTitle></CardHeader>
+              <CardContent><pre className="text-[11px] text-zinc-300 whitespace-pre-wrap leading-relaxed">{mariResponse}</pre></CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Shipment Detail Drawer */}
+      {selectedShipment && (
+        <div className="fixed inset-y-0 right-0 w-full sm:w-[450px] bg-zinc-950/95 backdrop-blur-2xl border-l border-zinc-800 shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+          <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60">
             <div>
-              <label className="text-xs font-semibold text-zinc-300">Origin Depot</label>
-              <input
-                type="text"
-                value={newShipment.origin}
-                onChange={(e) => setNewShipment({ ...newShipment, origin: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
+              <h2 className="font-bold text-white text-sm flex items-center gap-2">
+                {selectedShipment.trackingNumber}
+                <Badge variant={statusConfig[selectedShipment.status]?.badge}>{statusConfig[selectedShipment.status]?.label}</Badge>
+              </h2>
+              <p className="text-[11px] text-zinc-400 mt-0.5">{selectedShipment.customer}</p>
             </div>
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Destination Border</label>
-              <input
-                type="text"
-                value={newShipment.destination}
-                onChange={(e) => setNewShipment({ ...newShipment, destination: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
-            </div>
+            <button onClick={() => setSelectedShipment(null)} className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors text-lg">✕</button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Driver Name</label>
-              <input
-                type="text"
-                value={newShipment.driverName}
-                onChange={(e) => setNewShipment({ ...newShipment, driverName: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
+          <div className="flex-1 p-5 flex flex-col gap-4 overflow-y-auto">
+            <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-xs flex flex-col gap-2">
+              <div className="flex justify-between"><span className="text-zinc-500">Origin:</span><span className="text-white font-semibold">{selectedShipment.origin}</span></div>
+              <div className="flex justify-between"><span className="text-zinc-500">Destination:</span><span className="text-white font-semibold">{selectedShipment.destination}</span></div>
+              <div className="flex justify-between"><span className="text-zinc-500">Driver:</span><span className="text-white">{selectedShipment.driver}</span></div>
+              <div className="flex justify-between"><span className="text-zinc-500">Vehicle:</span><span className="text-white font-mono">{selectedShipment.vehicle}</span></div>
+              <div className="flex justify-between"><span className="text-zinc-500">Weight:</span><span className="text-white">{selectedShipment.weightKg.toLocaleString()} kg</span></div>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500">Customs:</span>
+                {selectedShipment.customsCleared
+                  ? <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Cleared</span>
+                  : <span className="text-amber-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Pending</span>}
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Vehicle Reg</label>
-              <input
-                type="text"
-                value={newShipment.vehicleReg}
-                onChange={(e) => setNewShipment({ ...newShipment, vehicleReg: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
+            <div className="flex flex-col gap-2">
+              <Button variant="primary" size="sm">Update Status</Button>
+              <Button variant="outline" size="sm">Download Documents</Button>
             </div>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-zinc-300">Cargo Weight (kg)</label>
-            <input
-              type="number"
-              value={newShipment.weightKg}
-              onChange={(e) => setNewShipment({ ...newShipment, weightKg: e.target.value })}
-              className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-            />
-          </div>
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button variant="primary" size="sm" onClick={handleCreateShipment} className="bg-emerald-600 font-bold">
-              Dispatch Shipment
-            </Button>
           </div>
         </div>
-      </Modal>
+      )}
     </div>
   );
 }

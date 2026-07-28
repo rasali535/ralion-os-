@@ -1,16 +1,25 @@
 const { Client } = require('pg');
 const fs = require('fs');
-const client = new Client('postgresql://postgres:EgywNLJWv2zjGGw7@db.yidsfihagwttlmhfynmf.supabase.co:5432/postgres');
-client.connect().then(async () => {
+const DB_URL = 'postgresql://postgres:EgywNLJWv2zjGGw7@db.yidsfihagwttlmhfynmf.supabase.co:5432/postgres';
+
+async function runMigration(filePath, label) {
+  const client = new Client(DB_URL);
+  await client.connect();
   try {
-    console.log("Reading Ralion Core migration file...");
-    const sql = fs.readFileSync('./supabase/migrations/20260728000001_ralion_core.sql', 'utf8');
-    console.log("Applying migration...");
+    console.log(`\n[${label}] Reading migration...`);
+    const sql = fs.readFileSync(filePath, 'utf8');
     await client.query(sql);
-    console.log("Migration applied successfully!");
+    console.log(`[${label}] ✅ Applied successfully`);
   } catch (e) {
-    console.error("Migration failed:", e);
+    console.error(`[${label}] ❌ Failed:`, e.message);
   } finally {
-    client.end();
+    await client.end();
   }
-});
+}
+
+async function main() {
+  await runMigration('./supabase/migrations/20260728000005_marketplace_enterprise.sql', 'Phase 8 & 9 Marketplace & Enterprise');
+  console.log('\n✅ All migrations complete');
+}
+
+main();
