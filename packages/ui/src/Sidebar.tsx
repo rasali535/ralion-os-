@@ -24,7 +24,8 @@ import {
   Globe,
   Store,
   ArrowLeft,
-  User
+  User,
+  Grid
 } from 'lucide-react';
 import { cn } from './utils';
 
@@ -47,15 +48,16 @@ export interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({
   currentPath,
-  orgName = "Enterprise Suite",
+  orgName = "Ralion Enterprise",
   onNavigate,
   onOpenMariAI,
-  enabledModules = ['mari', 'demos', 'customers', 'leads', 'crm', 'tasks', 'calendar', 'documents', 'reports', 'workflows', 'billing', 'growth', 'health', 'funeral', 'logistics', 'trade', 'marketplace', 'developer', 'enterprise', 'government']
+  enabledModules = ['workspace', 'mari', 'demos', 'customers', 'leads', 'crm', 'tasks', 'calendar', 'documents', 'reports', 'workflows', 'billing', 'growth', 'health', 'funeral', 'logistics', 'trade', 'marketplace', 'developer', 'enterprise', 'government']
 }) => {
   const platformUrl = process.env.NEXT_PUBLIC_RASALI_PLATFORM_URL || 'https://rasalilabs.com';
 
   const demoNav: SidebarItem[] = [
-    { id: 'demos', label: 'Showcase Demos', href: '/ralion/demos', icon: <Layers className="w-4 h-4 text-purple-400" />, badge: 'Phase 1' },
+    { id: 'workspace', label: 'Ralion App Shell', href: '/ralion/workspace', icon: <Grid className="w-4 h-4 text-emerald-400" />, badge: 'Shell' },
+    { id: 'demos', label: 'Showcase Demos', href: '/ralion/demos', icon: <Layers className="w-4 h-4 text-purple-400" /> },
   ];
 
   const coreNav: SidebarItem[] = [
@@ -76,9 +78,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const industryNav: SidebarItem[] = [
-    { id: 'health', label: 'Ralion Health (Pameltex)', href: '/ralion/industry/health', icon: <HeartPulse className="w-4 h-4" />, isIndustryPlugin: true },
-    { id: 'funeral', label: 'Ralion Funeral (Doves)', href: '/ralion/industry/funeral', icon: <Shield className="w-4 h-4" />, isIndustryPlugin: true },
-    { id: 'logistics', label: 'Ralion Logistics (DFS)', href: '/ralion/industry/logistics', icon: <Truck className="w-4 h-4" />, isIndustryPlugin: true },
+    { id: 'health', label: 'Ralion Health', href: '/ralion/industry/health', icon: <HeartPulse className="w-4 h-4" />, isIndustryPlugin: true },
+    { id: 'funeral', label: 'Ralion Funeral', href: '/ralion/industry/funeral', icon: <Shield className="w-4 h-4" />, isIndustryPlugin: true },
+    { id: 'logistics', label: 'Ralion Logistics', href: '/ralion/industry/logistics', icon: <Truck className="w-4 h-4" />, isIndustryPlugin: true },
     { id: 'trade', label: 'Ralion Trade', href: '/ralion/industry/trade', icon: <ShoppingBag className="w-4 h-4" />, isIndustryPlugin: true },
   ];
 
@@ -122,119 +124,106 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="w-64 h-screen bg-zinc-950/95 border-r border-zinc-800/80 flex flex-col justify-between select-none shrink-0">
-      <div className="p-4 flex flex-col gap-5 overflow-y-auto">
-        {/* Brand Header */}
-        <div className="flex flex-col gap-1 border-b border-zinc-800/60 pb-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] tracking-widest font-black uppercase text-blue-400">RAS ALI LABS</span>
-            <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400">v1.0</span>
+    <aside className="w-64 bg-zinc-950 border-r border-zinc-800/80 flex flex-col h-screen shrink-0 select-none">
+      {/* Brand Header */}
+      <div className="p-4 border-b border-zinc-800/80 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-black text-white text-sm shadow-md shadow-blue-500/20">
+            R
           </div>
-          <h1 className="text-xl font-black text-white tracking-wider flex items-center gap-1.5">
-            RALION
-          </h1>
-          <p className="text-[11px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 italic">
-            Empowered to Prosper
-          </p>
-          <div className="mt-2 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300">
-            <Building2 className="w-3.5 h-3.5 text-zinc-500" />
-            <span className="truncate font-medium">{orgName}</span>
+          <div className="flex flex-col">
+            <span className="font-extrabold text-sm text-white tracking-tight leading-none">Ralion Platform</span>
+            <span className="text-[10px] text-zinc-500 font-medium tracking-wide mt-0.5">{orgName}</span>
           </div>
-        </div>
-
-        {/* Mari AI Drawer Trigger */}
-        <button
-          onClick={onOpenMariAI}
-          className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/10 border border-blue-500/30 hover:border-purple-500/50 transition-all duration-300 group shadow-lg shadow-blue-500/5"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-              <Sparkles className="w-4 h-4 animate-pulse" />
-            </div>
-            <div className="text-left">
-              <div className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors">
-                Mari AI Assistant
-              </div>
-              <div className="text-[10px] text-zinc-400">Powered by Mari AI</div>
-            </div>
-          </div>
-          <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors" />
-        </button>
-
-        {/* Validation Demos */}
-        <div className="flex flex-col gap-1">
-          <div className="px-3 text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">
-            Validation Demos
-          </div>
-          {renderNavSection(demoNav)}
-        </div>
-
-        {/* Core Modules Section */}
-        <div className="flex flex-col gap-1">
-          <div className="px-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
-            Ralion Core
-          </div>
-          {renderNavSection(coreNav)}
-        </div>
-
-        {/* Growth Section */}
-        <div className="flex flex-col gap-1">
-          <div className="px-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
-            Marketing & Social
-          </div>
-          {renderNavSection(growthNav)}
-        </div>
-
-        {/* Industry Modules Section */}
-        <div className="flex flex-col gap-1">
-          <div className="px-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
-            Industry Plugins
-          </div>
-          {renderNavSection(industryNav)}
-        </div>
-
-        {/* Ecosystem Section */}
-        <div className="flex flex-col gap-1">
-          <div className="px-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
-            Platform Ecosystem
-          </div>
-          {renderNavSection(ecosystemNav)}
         </div>
       </div>
 
-      {/* Footer Settings & Platform Link */}
-      <div className="p-4 border-t border-zinc-800/80 bg-zinc-950 flex flex-col gap-1.5">
-        <button
-          onClick={() => onNavigate('/portal')}
-          className={cn(
-            "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
-          )}
-        >
-          <User className="w-4 h-4 text-blue-400" />
-          <span>Account & Portal</span>
-        </button>
+      {/* Navigation Groups */}
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6 scrollbar-thin scrollbar-thumb-zinc-800">
+        {/* Workspace & Demos */}
+        <div>
+          <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+            Ralion App Shell
+          </div>
+          <div className="space-y-1">
+            {renderNavSection(demoNav)}
+          </div>
+        </div>
 
-        <button
-          onClick={() => onNavigate('/ralion/settings')}
-          className={cn(
-            "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150",
-            currentPath === '/ralion/settings'
-              ? "bg-zinc-800 text-white font-semibold"
-              : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
-          )}
-        >
-          <Settings className="w-4 h-4" />
-          <span>Organization Settings</span>
-        </button>
+        {/* Core Platform Modules */}
+        <div>
+          <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+            Core Modules
+          </div>
+          <div className="space-y-1">
+            {renderNavSection(coreNav)}
+          </div>
+        </div>
 
-        <a
-          href={platformUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-purple-400 hover:text-purple-300 hover:bg-purple-950/30 transition-all duration-150 border border-purple-500/20 mt-1"
+        {/* Growth AI */}
+        <div>
+          <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+            Growth & Marketing
+          </div>
+          <div className="space-y-1">
+            {renderNavSection(growthNav)}
+          </div>
+        </div>
+
+        {/* Industry Plugins */}
+        <div>
+          <div className="px-3 mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+            <span>Industry Verticals</span>
+            <Badge variant="outline" className="text-[9px] py-0 px-1 font-mono text-zinc-400">Plugins</Badge>
+          </div>
+          <div className="space-y-1 mt-1">
+            {renderNavSection(industryNav)}
+          </div>
+        </div>
+
+        {/* Platform Ecosystem */}
+        <div>
+          <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+            Ecosystem & APIs
+          </div>
+          <div className="space-y-1">
+            {renderNavSection(ecosystemNav)}
+          </div>
+        </div>
+      </div>
+
+      {/* Mari AI Drawer Trigger */}
+      <div className="p-3 border-t border-zinc-800/80 bg-zinc-900/40">
+        <button
+          onClick={onOpenMariAI}
+          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 border border-blue-500/30 text-white font-medium text-xs hover:border-blue-500/50 transition-all group"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Ras Ali Labs</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="font-bold text-xs">Mari AI Assistant</span>
+              <span className="text-[9px] text-zinc-400">Contextual Intent Agent</span>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
+        </button>
+      </div>
+
+      {/* User Footer */}
+      <div className="p-3 border-t border-zinc-800/80 flex items-center justify-between bg-zinc-950">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold text-xs">
+            RA
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold text-white">Ras Ali Admin</span>
+            <span className="text-[10px] text-zinc-500 font-mono">admin@rasalilabs.com</span>
+          </div>
+        </div>
+        <a href={platformUrl} target="_blank" rel="noreferrer" className="text-zinc-500 hover:text-zinc-300 p-1">
+          <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
         </a>
       </div>
     </aside>
