@@ -175,7 +175,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div>
           <div className="px-3 mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-zinc-500">
             <span>Industry Verticals</span>
-            <Badge variant="outline" className="text-[9px] py-0 px-1 font-mono text-zinc-400">Plugins</Badge>
+            <Badge variant="purple" className="text-[9px] py-0 px-1 font-mono text-white">Plugins</Badge>
           </div>
           <div className="space-y-1 mt-1">
             {renderNavSection(industryNav)}
