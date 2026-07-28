@@ -1,0 +1,51 @@
+name: Production Windows Release Build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  windows-build:
+    name: Build Ralion Windows x64 Installer
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Monorepo Dependencies
+        run: npm ci
+
+      - name: Build Desktop Application Code
+        run: npm run desktop:build
+
+      - name: Package Production NSIS Windows x64 Installer
+        run: npm run desktop:dist:win
+
+      - name: Verify Installer Artifact Exists
+        shell: powershell
+        run: |
+          $installer = Get-ChildItem -Path apps/desktop/dist-installer/*.exe
+          if (-not $installer) {
+            Write-Error "No Windows installer executable found in dist-installer!"
+            exit 1
+          }
+          Write-Host "Generated Installer Artifact: $($installer.FullName)"
+          Write-Host "Installer File Size: $([math]::Round($installer.Length / 1MB, 2)) MB"
+
+      - name: Upload Windows Production Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ralion-Setup-Windows-x64
+          path: apps/desktop/dist-installer/*.exe
+          if-no-files-found: error

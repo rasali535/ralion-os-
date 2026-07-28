@@ -13,10 +13,46 @@
     "dev": "tsc && electron dist/main.js",
     "build": "tsc",
     "pack": "electron-builder --dir",
-    "dist:win": "electron-builder --win",
+    "dist:win": "electron-builder --win --x64",
     "dist:mac": "electron-builder --mac",
     "dist:linux": "electron-builder --linux",
     "dist:all": "electron-builder --win --mac --linux"
+  },
+  "build": {
+    "appId": "com.rasalilabs.ralion",
+    "productName": "Ralion",
+    "copyright": "Copyright © 2026 Ras Ali Labs",
+    "directories": {
+      "output": "dist-installer",
+      "buildResources": "assets"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "publisherName": "Ras Ali Labs",
+      "artifactName": "Ralion Setup ${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Ralion",
+      "artifactName": "Ralion Setup ${version}.${ext}"
+    }
   },
   "dependencies": {
     "electron-store": "^8.2.0",
