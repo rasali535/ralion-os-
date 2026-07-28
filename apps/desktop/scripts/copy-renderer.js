@@ -28,6 +28,8 @@ if (!fs.existsSync(indexHtmlPath)) {
     .logo { width: 48px; height: 48px; background: linear-gradient(135deg, #2563eb, #9333ea); border-radius: 0.75rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.5rem; margin-bottom: 1rem; }
     h1 { margin: 0 0 0.5rem 0; font-size: 1.5rem; font-weight: 800; }
     p { color: #a1a1aa; font-size: 0.875rem; line-height: 1.5; margin-bottom: 1.5rem; }
+    .btn { background: #2563eb; color: #ffffff; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; font-size: 0.875rem; }
+    .btn:hover { background: #1d4ed8; }
   </style>
 </head>
 <body>
@@ -35,6 +37,7 @@ if (!fs.existsSync(indexHtmlPath)) {
     <div class="logo">R</div>
     <h1>Ralion Platform Desktop</h1>
     <p>"Empowered to Prosper" — Ralion AI-Powered Business Operating System by Ras Ali Labs.</p>
+    <a href="#" onclick="window.location.href='/ralion'" class="btn">Connect to Workspace</a>
   </div>
 </body>
 </html>`;

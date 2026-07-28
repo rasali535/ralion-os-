@@ -11,8 +11,6 @@ const webDir = path.join(__dirname, '..', '..', 'web');
 const webOutDir = path.join(webDir, 'out');
 const desktopDistRenderer = path.join(__dirname, '..', 'dist', 'renderer');
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rasalilabs.com';
-
 console.log('🚀 [Build Renderer] Step 1: Building apps/web static export...');
 try {
   execSync('npm run build', { cwd: webDir, stdio: 'inherit' });
@@ -49,7 +47,7 @@ if (!fs.existsSync(indexHtmlPath)) {
     <div class="logo">R</div>
     <h1>Ralion Platform Desktop</h1>
     <p>"Empowered to Prosper" — Ralion AI-Powered Business Operating System by Ras Ali Labs.</p>
-    <a href="${APP_URL}" class="btn">Connect to Workspace</a>
+    <a href="#" onclick="window.location.href='/ralion'" class="btn">Connect to Workspace</a>
   </div>
 </body>
 </html>`;
