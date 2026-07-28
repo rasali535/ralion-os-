@@ -3,7 +3,7 @@ productName: Ralion
 copyright: Copyright © 2026 Ras Ali Labs
 
 directories:
-  output: dist-installer
+  output: release
   buildResources: assets
 
 files:

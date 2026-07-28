@@ -13,7 +13,7 @@
     "dev": "tsc && electron dist/main.js",
     "build": "tsc",
     "pack": "electron-builder --dir --x64",
-    "dist:win": "electron-builder --win --x64",
+    "dist:win": "electron-builder --win nsis --x64",
     "dist:mac": "electron-builder --mac",
     "dist:linux": "electron-builder --linux",
     "dist:all": "electron-builder --win --mac --linux"
@@ -23,7 +23,7 @@
     "productName": "Ralion",
     "copyright": "Copyright © 2026 Ras Ali Labs",
     "directories": {
-      "output": "dist-installer",
+      "output": "release",
       "buildResources": "assets"
     },
     "files": [

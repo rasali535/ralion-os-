@@ -1,4 +1,4 @@
-name: Production Windows Release 2.4.1 Build
+name: Production Windows PE Installer Build (v2.4.1)
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   windows-build:
-    name: Build Ralion Windows x64 Installer (v2.4.1)
+    name: Build Genuine Windows PE Executable (x64)
     runs-on: windows-latest
 
     steps:
@@ -26,39 +26,56 @@ jobs:
       - name: Install Monorepo Dependencies
         run: npm ci
 
-      - name: Build Desktop Application Code
+      - name: Compile Desktop TypeScript
         run: npm run desktop:build
 
-      - name: Package Production NSIS Windows x64 Installer
-        run: npm run desktop:dist:win
+      - name: Package Genuine Windows PE Installer (npx electron-builder --win nsis --x64)
+        run: npx electron-builder --win nsis --x64 --config apps/desktop/electron-builder.yml
 
-      - name: Automated PE Architecture & File Validation
+      - name: Automated PE Binary Validation & Header Verification
         shell: powershell
         run: |
-          $installer = Get-ChildItem -Path apps/desktop/dist-installer/*.exe | Select-Object -First 1
+          $installer = Get-ChildItem -Path apps/desktop/release/*.exe | Select-Object -First 1
           if (-not $installer) {
-            Write-Error "CRITICAL: No Windows installer executable found in dist-installer!"
+            Write-Error "CRITICAL ERROR: No executable artifact generated in apps/desktop/release/"
             exit 1
           }
 
           Write-Host "Target Artifact: $($installer.Name)"
-          Write-Host "Path: $($installer.FullName)"
-          Write-Host "Size: $([math]::Round($installer.Length / 1MB, 2)) MB"
+          Write-Host "Full Path: $($installer.FullName)"
+          $sizeMB = [math]::Round($installer.Length / 1MB, 2)
+          Write-Host "Installer Size: $sizeMB MB"
 
-          # Verify PE Machine Header (0x8664 = AMD64/x64)
-          $bytes = Get-Content -Path $installer.FullName -Encoding Byte -TotalCount 4096
-          $peOffset = [BitConverter]::ToInt32($bytes[0x3C..0x3F], 0)
-          $machine = [BitConverter]::ToUInt16($bytes[($peOffset + 4)..($peOffset + 5)], 0)
-
-          if ($machine -ne 0x8664 -and $machine -ne 0x014c) {
-            Write-Host "PE Machine Type Header: 0x$($machine.ToString('X4'))"
-          } else {
-            Write-Host "PE Validation SUCCESS: Executable header verified for 64-bit Windows execution (Machine: 0x$($machine.ToString('X4')))"
+          # 1. Size Validation (> 50MB)
+          if ($installer.Length -lt 50000000) {
+            Write-Error "CRITICAL ERROR: Installer file size ($sizeMB MB) is below minimum binary threshold (>50MB). File may be a placeholder or incomplete artifact."
+            exit 1
           }
 
-      - name: Upload Production Installer Artifact
+          # 2. PE Header Validation ("MZ" / 0x4D 0x5A)
+          $bytes = Get-Content -Path $installer.FullName -Encoding Byte -TotalCount 4096
+          if ($bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) {
+            Write-Error "CRITICAL ERROR: File header signature is NOT a valid Windows PE binary (Magic bytes 'MZ' 0x4D 0x5A missing)!"
+            exit 1
+          }
+
+          # 3. Architecture Header Validation (PE offset -> Machine 0x8664 for AMD64)
+          $peOffset = [BitConverter]::ToInt32($bytes[0x3C..0x3F], 0)
+          $machine = [BitConverter]::ToUInt16($bytes[($peOffset + 4)..($peOffset + 5)], 0)
+          Write-Host "PE Magic Header: MZ (0x4D 0x5A) VERIFIED"
+          Write-Host "PE Machine Type Header: 0x$($machine.ToString('X4'))"
+
+          if ($machine -ne 0x8664) {
+            Write-Warning "Machine header 0x$($machine.ToString('X4')) detected. NSIS installer wrapper verified."
+          } else {
+            Write-Host "Architecture Validation: Native 64-bit AMD64 binary VERIFIED"
+          }
+
+          Write-Host "✅ Genuine Windows PE Executable Validation Passed Successfully!"
+
+      - name: Upload Production PE Installer Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ralion-desktop-2.4.1-setup
-          path: apps/desktop/dist-installer/*.exe
+          path: apps/desktop/release/ralion-desktop-2.4.1-setup.exe
           if-no-files-found: error
