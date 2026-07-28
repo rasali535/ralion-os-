@@ -50,7 +50,7 @@ export default function RalionDynamicWorkspacePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="text-xs font-mono text-emerald-400 border-emerald-500/30">
+          <Badge variant="default" className="text-xs font-mono text-emerald-400 border border-emerald-500/30">
             ● {activeModules.length} Modules Active
           </Badge>
           <Link href="/ralion/mari-ai">
@@ -77,7 +77,7 @@ export default function RalionDynamicWorkspacePage() {
                       <IconComponent className="w-5 h-5" />
                     </div>
                     {mod.isIndustryPlugin && (
-                      <Badge variant="secondary" className="text-[10px] uppercase font-mono">
+                      <Badge variant="purple" className="text-[10px] uppercase font-mono">
                         Industry Vertical
                       </Badge>
                     )}

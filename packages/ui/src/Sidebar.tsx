@@ -28,6 +28,7 @@ import {
   Grid
 } from 'lucide-react';
 import { cn } from './utils';
+import { Badge } from './Badge';
 
 export interface SidebarItem {
   id: string;
