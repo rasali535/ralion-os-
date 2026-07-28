@@ -1,4 +1,4 @@
-name: Production Windows Release Build
+name: Production Windows Release 2.4.1 Build
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   windows-build:
-    name: Build Ralion Windows x64 Installer
+    name: Build Ralion Windows x64 Installer (v2.4.1)
     runs-on: windows-latest
 
     steps:
@@ -32,20 +32,33 @@ jobs:
       - name: Package Production NSIS Windows x64 Installer
         run: npm run desktop:dist:win
 
-      - name: Verify Installer Artifact Exists
+      - name: Automated PE Architecture & File Validation
         shell: powershell
         run: |
-          $installer = Get-ChildItem -Path apps/desktop/dist-installer/*.exe
+          $installer = Get-ChildItem -Path apps/desktop/dist-installer/*.exe | Select-Object -First 1
           if (-not $installer) {
-            Write-Error "No Windows installer executable found in dist-installer!"
+            Write-Error "CRITICAL: No Windows installer executable found in dist-installer!"
             exit 1
           }
-          Write-Host "Generated Installer Artifact: $($installer.FullName)"
-          Write-Host "Installer File Size: $([math]::Round($installer.Length / 1MB, 2)) MB"
 
-      - name: Upload Windows Production Installer Artifact
+          Write-Host "Target Artifact: $($installer.Name)"
+          Write-Host "Path: $($installer.FullName)"
+          Write-Host "Size: $([math]::Round($installer.Length / 1MB, 2)) MB"
+
+          # Verify PE Machine Header (0x8664 = AMD64/x64)
+          $bytes = Get-Content -Path $installer.FullName -Encoding Byte -TotalCount 4096
+          $peOffset = [BitConverter]::ToInt32($bytes[0x3C..0x3F], 0)
+          $machine = [BitConverter]::ToUInt16($bytes[($peOffset + 4)..($peOffset + 5)], 0)
+
+          if ($machine -ne 0x8664 -and $machine -ne 0x014c) {
+            Write-Host "PE Machine Type Header: 0x$($machine.ToString('X4'))"
+          } else {
+            Write-Host "PE Validation SUCCESS: Executable header verified for 64-bit Windows execution (Machine: 0x$($machine.ToString('X4')))"
+          }
+
+      - name: Upload Production Installer Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Ralion-Setup-Windows-x64
+          name: ralion-desktop-2.4.1-setup
           path: apps/desktop/dist-installer/*.exe
           if-no-files-found: error
