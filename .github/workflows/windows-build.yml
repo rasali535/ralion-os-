@@ -1,4 +1,4 @@
-name: Production Windows PE Installer Build (v2.4.1)
+name: Production Windows PE Installer Build (v2.4.2)
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   windows-build:
-    name: Build Genuine Windows PE Executable (x64)
+    name: Build Ralion Windows PE Executable (v2.4.2)
     runs-on: windows-latest
 
     steps:
@@ -32,7 +32,7 @@ jobs:
       - name: Package Genuine Windows PE Installer (npx electron-builder --win nsis --x64)
         run: npx electron-builder --win nsis --x64 --config apps/desktop/electron-builder.yml
 
-      - name: Automated PE Binary Validation & Header Verification
+      - name: Automated PE Binary Validation & Size Check (>100MB Target)
         shell: powershell
         run: |
           $installer = Get-ChildItem -Path apps/desktop/release/*.exe | Select-Object -First 1
@@ -71,11 +71,11 @@ jobs:
             Write-Host "Architecture Validation: Native 64-bit AMD64 binary VERIFIED"
           }
 
-          Write-Host "✅ Genuine Windows PE Executable Validation Passed Successfully!"
+          Write-Host "✅ Genuine Windows PE Executable Validation Passed Successfully for v2.4.2!"
 
       - name: Upload Production PE Installer Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ralion-desktop-2.4.1-setup
-          path: apps/desktop/release/ralion-desktop-2.4.1-setup.exe
+          name: ralion-desktop-2.4.2-setup
+          path: apps/desktop/release/ralion-desktop-2.4.2-setup.exe
           if-no-files-found: error
