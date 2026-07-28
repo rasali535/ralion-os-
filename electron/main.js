@@ -111,7 +111,7 @@ function createWindow() {
   const isPackaged = app.isPackaged || process.env.NODE_ENV === 'production';
 
   if (!isPackaged) {
-    const devUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
+    const devUrl = process.env.ELECTRON_START_URL || 'http://localhost:6509';
     log.info('[Renderer] Loading Dev Server:', devUrl);
     mainWindow.loadURL(devUrl).catch(err => log.error('[Renderer Load Failure]', err));
   } else {
