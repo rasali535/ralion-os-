@@ -22,7 +22,9 @@ import {
   Layers,
   Code,
   Globe,
-  Store
+  Store,
+  ArrowLeft,
+  User
 } from 'lucide-react';
 import { cn } from './utils';
 
@@ -50,9 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenMariAI,
   enabledModules = ['mari', 'demos', 'customers', 'leads', 'crm', 'tasks', 'calendar', 'documents', 'reports', 'workflows', 'billing', 'growth', 'health', 'funeral', 'logistics', 'trade', 'marketplace', 'developer', 'enterprise', 'government']
 }) => {
-  const aiNav: SidebarItem[] = [
-    { id: 'mari', label: 'Mari AI Workspace', href: '/ralion/mari-ai', icon: <Sparkles className="w-4 h-4 text-purple-400" />, badge: 'AI Hub' },
-  ];
+  const platformUrl = process.env.NEXT_PUBLIC_RASALI_PLATFORM_URL || 'https://rasalilabs.com';
 
   const demoNav: SidebarItem[] = [
     { id: 'demos', label: 'Showcase Demos', href: '/ralion/demos', icon: <Layers className="w-4 h-4 text-purple-400" />, badge: 'Phase 1' },
@@ -161,7 +161,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors" />
         </button>
 
-        {/* Case Study Demos Section */}
+        {/* Validation Demos */}
         <div className="flex flex-col gap-1">
           <div className="px-3 text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">
             Validation Demos
@@ -202,8 +202,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Footer Settings */}
-      <div className="p-4 border-t border-zinc-800/80 bg-zinc-950">
+      {/* Footer Settings & Platform Link */}
+      <div className="p-4 border-t border-zinc-800/80 bg-zinc-950 flex flex-col gap-1.5">
+        <button
+          onClick={() => onNavigate('/portal')}
+          className={cn(
+            "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
+          )}
+        >
+          <User className="w-4 h-4 text-blue-400" />
+          <span>Account & Portal</span>
+        </button>
+
         <button
           onClick={() => onNavigate('/ralion/settings')}
           className={cn(
@@ -216,6 +226,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Settings className="w-4 h-4" />
           <span>Organization Settings</span>
         </button>
+
+        <a
+          href={platformUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-purple-400 hover:text-purple-300 hover:bg-purple-950/30 transition-all duration-150 border border-purple-500/20 mt-1"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Ras Ali Labs</span>
+        </a>
       </div>
     </aside>
   );
