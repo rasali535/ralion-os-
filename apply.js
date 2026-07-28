@@ -18,7 +18,7 @@ async function runMigration(filePath, label) {
 }
 
 async function main() {
-  await runMigration('./supabase/migrations/20260728000005_marketplace_enterprise.sql', 'Phase 8 & 9 Marketplace & Enterprise');
+  await runMigration('./supabase/migrations/20260728000006_release_management.sql', 'Phase 1 Release Management');
   console.log('\n✅ All migrations complete');
 }
 
