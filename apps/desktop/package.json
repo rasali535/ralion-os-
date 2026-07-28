@@ -12,8 +12,9 @@
   "scripts": {
     "dev": "tsc && electron dist/main.js",
     "build": "tsc && node scripts/build-renderer.js",
-    "pack": "electron-builder --dir --x64 --config electron-builder.yml",
-    "dist:win": "node scripts/build-renderer.js && tsc && electron-builder --win nsis --x64 --config electron-builder.yml",
+    "copy:renderer": "node scripts/copy-renderer.js",
+    "pack": "node scripts/copy-renderer.js && electron-builder --dir --x64 --config electron-builder.yml",
+    "dist:win": "node scripts/copy-renderer.js && electron-builder --win nsis --x64 --config electron-builder.yml",
     "dist:mac": "electron-builder --mac --config electron-builder.yml",
     "dist:linux": "electron-builder --linux --config electron-builder.yml",
     "dist:all": "electron-builder --win --mac --linux --config electron-builder.yml",
