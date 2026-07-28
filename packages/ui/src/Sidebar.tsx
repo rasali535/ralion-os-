@@ -48,35 +48,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
   enabledModules = ['mari', 'demos', 'customers', 'leads', 'crm', 'tasks', 'calendar', 'documents', 'reports', 'workflows', 'billing', 'growth', 'health', 'funeral', 'logistics', 'trade']
 }) => {
   const aiNav: SidebarItem[] = [
-    { id: 'mari', label: 'Mari AI Workspace', href: '/mari-ai', icon: <Sparkles className="w-4 h-4 text-purple-400" />, badge: 'AI Hub' },
+    { id: 'mari', label: 'Mari AI Workspace', href: '/ralion/mari-ai', icon: <Sparkles className="w-4 h-4 text-purple-400" />, badge: 'AI Hub' },
   ];
 
   const demoNav: SidebarItem[] = [
-    { id: 'demos', label: 'Showcase Demos', href: '/demos', icon: <Layers className="w-4 h-4 text-purple-400" />, badge: 'Phase 1' },
+    { id: 'demos', label: 'Showcase Demos', href: '/ralion/demos', icon: <Layers className="w-4 h-4 text-purple-400" />, badge: 'Phase 1' },
   ];
 
   const coreNav: SidebarItem[] = [
-    { id: 'dashboard', label: 'Dashboard', href: '/', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: 'customers', label: 'Customers', href: '/customers', icon: <Users className="w-4 h-4 text-blue-400" /> },
-    { id: 'leads', label: 'Leads', href: '/leads', icon: <Filter className="w-4 h-4 text-amber-400" /> },
-    { id: 'crm', label: 'Sales Pipeline (CRM)', href: '/crm', icon: <UserCheck className="w-4 h-4" /> },
-    { id: 'tasks', label: 'Tasks', href: '/tasks', icon: <CheckSquare className="w-4 h-4" /> },
-    { id: 'calendar', label: 'Calendar', href: '/calendar', icon: <Calendar className="w-4 h-4" /> },
-    { id: 'documents', label: 'Documents', href: '/documents', icon: <Folder className="w-4 h-4" /> },
-    { id: 'reports', label: 'Reports', href: '/reports', icon: <BarChart2 className="w-4 h-4 text-emerald-400" /> },
-    { id: 'workflows', label: 'No-Code Workflows', href: '/workflows', icon: <Zap className="w-4 h-4" /> },
-    { id: 'billing', label: 'Billing & Licenses', href: '/billing', icon: <CreditCard className="w-4 h-4" /> },
+    { id: 'dashboard', label: 'Dashboard', href: '/ralion/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+    { id: 'customers', label: 'Customers', href: '/ralion/customers', icon: <Users className="w-4 h-4 text-blue-400" /> },
+    { id: 'leads', label: 'Leads', href: '/ralion/leads', icon: <Filter className="w-4 h-4 text-amber-400" /> },
+    { id: 'crm', label: 'Sales Pipeline (CRM)', href: '/ralion/crm', icon: <UserCheck className="w-4 h-4" /> },
+    { id: 'tasks', label: 'Tasks', href: '/ralion/tasks', icon: <CheckSquare className="w-4 h-4" /> },
+    { id: 'calendar', label: 'Calendar', href: '/ralion/calendar', icon: <Calendar className="w-4 h-4" /> },
+    { id: 'documents', label: 'Documents', href: '/ralion/documents', icon: <Folder className="w-4 h-4" /> },
+    { id: 'reports', label: 'Reports', href: '/ralion/reports', icon: <BarChart2 className="w-4 h-4 text-emerald-400" /> },
+    { id: 'workflows', label: 'No-Code Workflows', href: '/ralion/workflows', icon: <Zap className="w-4 h-4" /> },
+    { id: 'billing', label: 'Billing & Licenses', href: '/ralion/billing', icon: <CreditCard className="w-4 h-4" /> },
   ];
 
   const growthNav: SidebarItem[] = [
-    { id: 'growth', label: 'Ralion Growth AI', href: '/growth', icon: <TrendingUp className="w-4 h-4" />, badge: 'AI' },
+    { id: 'growth', label: 'Ralion Growth AI', href: '/ralion/growth', icon: <TrendingUp className="w-4 h-4" />, badge: 'AI' },
   ];
 
   const industryNav: SidebarItem[] = [
-    { id: 'health', label: 'Ralion Health (Pameltex)', href: '/industry/health', icon: <HeartPulse className="w-4 h-4" />, isIndustryPlugin: true },
-    { id: 'funeral', label: 'Ralion Funeral (Doves)', href: '/industry/funeral', icon: <Shield className="w-4 h-4" />, isIndustryPlugin: true },
-    { id: 'logistics', label: 'Ralion Logistics (DFS)', href: '/industry/logistics', icon: <Truck className="w-4 h-4" />, isIndustryPlugin: true },
-    { id: 'trade', label: 'Ralion Trade', href: '/industry/trade', icon: <ShoppingBag className="w-4 h-4" />, isIndustryPlugin: true },
+    { id: 'health', label: 'Ralion Health (Pameltex)', href: '/ralion/industry/health', icon: <HeartPulse className="w-4 h-4" />, isIndustryPlugin: true },
+    { id: 'funeral', label: 'Ralion Funeral (Doves)', href: '/ralion/industry/funeral', icon: <Shield className="w-4 h-4" />, isIndustryPlugin: true },
+    { id: 'logistics', label: 'Ralion Logistics (DFS)', href: '/ralion/industry/logistics', icon: <Truck className="w-4 h-4" />, isIndustryPlugin: true },
+    { id: 'trade', label: 'Ralion Trade', href: '/ralion/industry/trade', icon: <ShoppingBag className="w-4 h-4" />, isIndustryPlugin: true },
   ];
 
   const renderNavSection = (items: SidebarItem[]) => {
@@ -187,10 +187,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Footer Settings */}
       <div className="p-4 border-t border-zinc-800/80 bg-zinc-950">
         <button
-          onClick={() => onNavigate('/settings')}
+          onClick={() => onNavigate('/ralion/settings')}
           className={cn(
             "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150",
-            currentPath === '/settings'
+            currentPath === '/ralion/settings'
               ? "bg-zinc-800 text-white font-semibold"
               : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
           )}

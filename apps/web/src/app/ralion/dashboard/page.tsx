@@ -41,21 +41,28 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* View Mode Toggle Buttons */}
-        <div className="flex items-center gap-1.5 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
-          {(['CEO', 'OPERATIONS', 'MARKETING'] as DashboardViewMode[]).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                viewMode === mode
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              {mode} View
-            </button>
-          ))}
+        {/* Quick Actions & View Mode */}
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex items-center gap-2">
+            <Button variant="primary" size="sm">Add Customer</Button>
+            <Button variant="outline" size="sm">Create Task</Button>
+            <Button variant="outline" size="sm">Upload Document</Button>
+          </div>
+          <div className="flex items-center gap-1.5 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+            {(['CEO', 'OPERATIONS', 'MARKETING'] as DashboardViewMode[]).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  viewMode === mode
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                {mode} View
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
