@@ -12,6 +12,7 @@ import {
 import * as path from 'path';
 import * as os from 'os';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
 import Store from 'electron-store';
 
 // Safely attempt electron-log require
@@ -125,22 +126,46 @@ function createWindow() {
     },
   });
 
-  const isPackaged = app.isPackaged || process.env.NODE_ENV === 'production';
+  const isDev = !app.isPackaged;
 
-  if (!isPackaged) {
+  if (isDev) {
     const devUrl = process.env.ELECTRON_START_URL || 'http://localhost:6509';
-    log.info('[Renderer] Loading Development Server URL:', devUrl);
+    log.info('[Renderer] Loading Development:', devUrl);
     mainWindow.loadURL(devUrl).catch(err => {
       log.error('[Renderer Load Failure]', err);
     });
   } else {
     // Load local bundled static Next.js export in dist/renderer/index.html
-    const indexPath = path.join(__dirname, 'renderer', 'index.html');
-    log.info('[Renderer] Loading Local Bundled HTML:', indexPath);
-    mainWindow.loadFile(indexPath).catch(err => {
-      log.error('[Renderer Load Failure] Local index.html missing or unreadable:', indexPath, err);
+    const rendererPath = path.join(__dirname, 'renderer', 'index.html');
+    log.info('[Renderer] Loading Production:', rendererPath);
+    mainWindow.loadFile(rendererPath).catch(err => {
+      log.error('[Renderer Load Failure] Local index.html missing or unreadable:', rendererPath, err);
     });
   }
+
+  // Intercept navigation to load local subfolder index.html for Next static export routes
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('file://')) {
+      try {
+        const parsedUrl = new URL(url);
+        let pathname = parsedUrl.pathname;
+        if (!pathname.includes('renderer')) {
+          event.preventDefault();
+          const cleanPath = pathname.replace(/^\/[A-Z]:/i, '').replace(/^\//, '');
+          const targetHtml = path.join(__dirname, 'renderer', cleanPath, 'index.html');
+          if (fs.existsSync(targetHtml)) {
+            log.info('[Renderer Navigation] Redirecting file:// route to static HTML:', targetHtml);
+            mainWindow?.loadFile(targetHtml);
+          } else {
+            log.warn('[Renderer Navigation] Subfolder index.html not found, falling back to root index.html');
+            mainWindow?.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+          }
+        }
+      } catch (e: any) {
+        log.error('[Renderer Navigation Error]', e?.message || e);
+      }
+    }
+  });
 
   // Diagnostics: fail load logging
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
