@@ -13,8 +13,6 @@ import * as path from 'path';
 import * as os from 'os';
 import * as crypto from 'crypto';
 import Store from 'electron-store';
-import log from 'electron-log';
-import { autoUpdater } from 'electron-updater';
 
 // ─── Globals ───────────────────────────────────────────────────────────────────
 let mainWindow: BrowserWindow | null = null;
@@ -30,9 +28,17 @@ const store = new Store<{
 const RALION_API = process.env.RALION_API_URL || 'https://ralion.rasalilabs.com';
 const OFFLINE_GRACE_DAYS = 7;
 
-log.transports.file.level = 'info';
-log.transports.console.level = 'debug';
-autoUpdater.logger = log;
+// Safely attempt electron-updater & log require if present
+let autoUpdater: any = null;
+let log: any = console;
+try {
+  log = require('electron-log');
+  const updaterModule = require('electron-updater');
+  autoUpdater = updaterModule.autoUpdater;
+  if (autoUpdater) autoUpdater.logger = log;
+} catch (e) {
+  // Fallback to standard console logger if updater not present
+}
 
 // ─── Hardware Device ID ─────────────────────────────────────────────────────────
 function getDeviceId(): string {
@@ -60,23 +66,22 @@ async function validateLicense(key: string): Promise<{
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ licenseKey: key, deviceId, platform: process.platform }),
-      signal: AbortSignal.timeout(10000),
     });
 
     if (!res.ok) throw new Error(`Server returned ${res.status}`);
-    const data = await res.json();
+    const data: any = await res.json();
 
     // Cache successful validation timestamp
     store.set('lastLicenseCheck', Date.now());
     return data;
   } catch (err: any) {
-    log.warn('[License] Could not reach server, checking offline grace period...', err.message);
+    if (log.warn) log.warn('[License] Could not reach server, checking offline grace period...', err.message);
 
     const lastCheck = store.get('lastLicenseCheck') || 0;
     const daysSinceCheck = (Date.now() - lastCheck) / (1000 * 60 * 60 * 24);
 
     if (lastCheck > 0 && daysSinceCheck < OFFLINE_GRACE_DAYS) {
-      log.info(`[License] Offline grace period active. ${Math.floor(OFFLINE_GRACE_DAYS - daysSinceCheck)} days remaining.`);
+      if (log.info) log.info(`[License] Offline grace period active. ${Math.floor(OFFLINE_GRACE_DAYS - daysSinceCheck)} days remaining.`);
       return {
         valid: true,
         edition: 'offline_grace',
@@ -100,7 +105,6 @@ function createWindow() {
     backgroundColor: '#09090b',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     frame: process.platform !== 'win32',
-    icon: path.join(__dirname, '../assets/icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -110,7 +114,6 @@ function createWindow() {
     },
   });
 
-  // Load the Ralion web app
   const isProd = process.env.NODE_ENV === 'production';
   const appUrl = isProd
     ? 'https://app.rasalilabs.com'
@@ -118,14 +121,12 @@ function createWindow() {
 
   mainWindow.loadURL(appUrl);
 
-  // Inject desktop context flag
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow?.webContents.executeJavaScript(
       `window.__RALION_DESKTOP__ = true; window.__RALION_VERSION__ = '${app.getVersion()}';`
     );
   });
 
-  // Open external links in browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
@@ -133,20 +134,19 @@ function createWindow() {
 
   mainWindow.on('closed', () => { mainWindow = null; });
 
-  // Setup auto-updater after window is ready
   setupAutoUpdater();
 }
 
 // ─── System Tray ───────────────────────────────────────────────────────────────
 function createTray() {
-  const icon = nativeImage.createFromPath(path.join(__dirname, '../assets/tray-icon.png'));
-  tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
+  const icon = nativeImage.createEmpty();
+  tray = new Tray(icon);
 
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Ralion — Empowered to Prosper', enabled: false },
     { type: 'separator' },
     { label: 'Open Ralion', click: () => { mainWindow?.show(); mainWindow?.focus(); } },
-    { label: 'Check for Updates', click: () => autoUpdater.checkForUpdatesAndNotify() },
+    { label: 'Check for Updates', click: () => { if (autoUpdater) autoUpdater.checkForUpdatesAndNotify(); } },
     { type: 'separator' },
     { label: 'Quit', click: () => app.quit() },
   ]);
@@ -158,37 +158,42 @@ function createTray() {
 
 // ─── Auto Updater ──────────────────────────────────────────────────────────────
 function setupAutoUpdater() {
-  autoUpdater.setFeedURL({
-    provider: 'generic',
-    url: `${RALION_API}/api/version/releases`,
-  });
+  if (!autoUpdater) return;
 
-  autoUpdater.on('update-available', (info) => {
-    log.info('[Updater] Update available:', info.version);
-    if (Notification.isSupported()) {
-      new Notification({
-        title: 'Ralion Update Available',
-        body: `Version ${info.version} is downloading in the background.`,
-      }).show();
-    }
-  });
-
-  autoUpdater.on('update-downloaded', (info) => {
-    dialog.showMessageBox(mainWindow!, {
-      type: 'info',
-      title: 'Update Ready',
-      message: `Ralion ${info.version} is ready to install. Restart now?`,
-      buttons: ['Restart Now', 'Later'],
-    }).then(({ response }) => {
-      if (response === 0) autoUpdater.quitAndInstall();
+  try {
+    autoUpdater.setFeedURL({
+      provider: 'generic',
+      url: `${RALION_API}/api/version/releases`,
     });
-  });
 
-  autoUpdater.on('error', (err) => log.error('[Updater] Error:', err));
+    autoUpdater.on('update-available', (info: any) => {
+      if (log.info) log.info('[Updater] Update available:', info?.version);
+      if (Notification.isSupported()) {
+        new Notification({
+          title: 'Ralion Update Available',
+          body: `Version ${info?.version} is downloading in the background.`,
+        }).show();
+      }
+    });
 
-  // Check on startup + every 4 hours
-  setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 5000);
-  setInterval(() => autoUpdater.checkForUpdatesAndNotify(), 4 * 60 * 60 * 1000);
+    autoUpdater.on('update-downloaded', (info: any) => {
+      dialog.showMessageBox(mainWindow!, {
+        type: 'info',
+        title: 'Update Ready',
+        message: `Ralion ${info?.version} is ready to install. Restart now?`,
+        buttons: ['Restart Now', 'Later'],
+      }).then(({ response }) => {
+        if (response === 0) autoUpdater.quitAndInstall();
+      });
+    });
+
+    autoUpdater.on('error', (err: any) => { if (log.error) log.error('[Updater] Error:', err); });
+
+    setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 5000);
+    setInterval(() => autoUpdater.checkForUpdatesAndNotify(), 4 * 60 * 60 * 1000);
+  } catch (e) {
+    if (log.error) log.error('[Updater] Setup failed:', e);
+  }
 }
 
 // ─── Application Menu ──────────────────────────────────────────────────────────
@@ -199,7 +204,7 @@ function buildAppMenu() {
       submenu: [
         { label: 'About Ralion', role: 'about' },
         { type: 'separator' },
-        { label: 'Check for Updates', click: () => autoUpdater.checkForUpdatesAndNotify() },
+        { label: 'Check for Updates', click: () => { if (autoUpdater) autoUpdater.checkForUpdatesAndNotify(); } },
         { type: 'separator' },
         { label: 'Quit Ralion', accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Alt+F4', role: 'quit' },
       ],
@@ -226,8 +231,6 @@ function buildAppMenu() {
       submenu: [
         { label: 'Ras Ali Labs Support', click: () => shell.openExternal('https://rasalilabs.com/support') },
         { label: 'Documentation', click: () => shell.openExternal('https://docs.rasalilabs.com') },
-        { type: 'separator' },
-        { label: 'View Logs', click: () => shell.showItemInFolder(log.transports.file.getFile().path) },
       ],
     },
   ];
@@ -237,10 +240,8 @@ function buildAppMenu() {
 
 // ─── IPC Handlers ──────────────────────────────────────────────────────────────
 function registerIpcHandlers() {
-  // Device identity
   ipcMain.handle('get-device-id', () => getDeviceId());
 
-  // Platform info
   ipcMain.handle('get-platform-info', () => ({
     platform: process.platform,
     arch: process.arch,
@@ -251,12 +252,10 @@ function registerIpcHandlers() {
     hostname: os.hostname(),
   }));
 
-  // License validation
   ipcMain.handle('validate-license', async (_, key: string) => {
     return validateLicense(key);
   });
 
-  // License activation (bind device)
   ipcMain.handle('activate-license', async (_, key: string) => {
     try {
       const deviceId = getDeviceId();
@@ -270,7 +269,7 @@ function registerIpcHandlers() {
           platform: process.platform,
         }),
       });
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.success) {
         store.set('licenseKey', key);
         store.set('lastLicenseCheck', Date.now());
@@ -281,7 +280,6 @@ function registerIpcHandlers() {
     }
   });
 
-  // License deactivation
   ipcMain.handle('deactivate-license', async () => {
     const key = store.get('licenseKey');
     const deviceId = getDeviceId();
@@ -299,19 +297,17 @@ function registerIpcHandlers() {
     }
   });
 
-  // Offline status
   ipcMain.handle('get-offline-status', () => {
     const lastCheck = store.get('lastLicenseCheck') || 0;
     const daysSince = (Date.now() - lastCheck) / (1000 * 60 * 60 * 24);
     return {
-      isOffline: !navigator?.onLine ?? false,
+      isOffline: false,
       graceDaysRemaining: Math.max(0, Math.floor(OFFLINE_GRACE_DAYS - daysSince)),
       lastSyncTimestamp: new Date(lastCheck).toISOString(),
       pendingActions: (store.get('offlinePendingActions') || []).length,
     };
   });
 
-  // Store offline action
   ipcMain.handle('queue-offline-action', (_, action: any) => {
     const pending = store.get('offlinePendingActions') || [];
     pending.push({ ...action, queuedAt: new Date().toISOString() });
@@ -319,12 +315,10 @@ function registerIpcHandlers() {
     return { queued: true, total: pending.length };
   });
 
-  // Get pending offline actions (for sync)
   ipcMain.handle('get-pending-actions', () => {
     return store.get('offlinePendingActions') || [];
   });
 
-  // Clear synced actions
   ipcMain.handle('clear-synced-actions', (_, syncedIds: string[]) => {
     const pending = (store.get('offlinePendingActions') || []).filter(
       (a: any) => !syncedIds.includes(a.id)
@@ -333,22 +327,18 @@ function registerIpcHandlers() {
     return { remaining: pending.length };
   });
 
-  // Show native notification
   ipcMain.handle('show-notification', (_, { title, body }: { title: string; body: string }) => {
     if (Notification.isSupported()) {
       new Notification({ title, body }).show();
     }
   });
 
-  // Check for updates manually
-  ipcMain.handle('check-updates', () => autoUpdater.checkForUpdatesAndNotify());
+  ipcMain.handle('check-updates', () => { if (autoUpdater) autoUpdater.checkForUpdatesAndNotify(); });
 
-  // Open file in OS
   ipcMain.handle('open-external', (_, url: string) => shell.openExternal(url));
 }
 
 // ─── App Lifecycle ─────────────────────────────────────────────────────────────
-// Single instance lock
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
@@ -361,7 +351,7 @@ if (!gotLock) {
   });
 
   app.whenReady().then(() => {
-    log.info(`[Ralion Desktop] Starting v${app.getVersion()} on ${process.platform}`);
+    if (log.info) log.info(`[Ralion Desktop] Starting v${app.getVersion()} on ${process.platform}`);
     registerIpcHandlers();
     buildAppMenu();
     createTray();
@@ -374,9 +364,5 @@ if (!gotLock) {
 
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
-  });
-
-  app.on('before-quit', () => {
-    log.info('[Ralion Desktop] Application quitting...');
   });
 }

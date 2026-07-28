@@ -11,16 +11,16 @@ files:
   - node_modules/**/*
   - package.json
 
-# ── Windows ──────────────────────────────────────────────────────────────────
+# ── Windows x64 NSIS Installer ────────────────────────────────────────────────
 win:
   target:
     - target: nsis
       arch:
         - x64
-        - arm64
   icon: assets/icon.ico
   publisherName: Ras Ali Labs
   verifyUpdateCodeSignature: false
+  artifactName: "${productName} Setup ${version}.${ext}"
 
 nsis:
   oneClick: false
@@ -32,6 +32,7 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: Ralion
+  artifactName: "${productName} Setup ${version}.${ext}"
 
 # ── macOS ─────────────────────────────────────────────────────────────────────
 mac:
@@ -42,32 +43,15 @@ mac:
         - arm64
   icon: assets/icon.icns
   category: public.app-category.business
-  hardenedRuntime: true
-  gatekeeperAssess: false
-  entitlements: assets/entitlements.mac.plist
-  entitlementsInherit: assets/entitlements.mac.plist
 
 dmg:
   title: Ralion ${version}
   icon: assets/icon.icns
-  background: assets/dmg-background.png
-  window:
-    width: 540
-    height: 380
-  contents:
-    - x: 140
-      y: 200
-    - x: 400
-      y: 200
-      type: link
-      path: /Applications
 
 # ── Linux ─────────────────────────────────────────────────────────────────────
 linux:
   target:
     - AppImage
-    - deb
-    - rpm
   icon: assets/icon.png
   category: Office
   maintainer: Ras Ali Labs <support@rasalilabs.com>
@@ -77,6 +61,5 @@ publish:
   provider: generic
   url: https://ralion.rasalilabs.com/api/version/releases
 
-# ── TypeScript ────────────────────────────────────────────────────────────────
 extraMetadata:
   main: dist/main.js
