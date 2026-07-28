@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Modal } from '@ralion/ui';
 import { Shield, Plus, FileText, Calendar, Truck, DollarSign, UserCheck, Download, Sparkles, X } from 'lucide-react';
+import { generateEnterpriseDocument } from '@ralion/core';
+
 interface FuneralCase {
   id: string;
   orgId: string;
@@ -14,8 +16,6 @@ interface FuneralCase {
   status: string;
   serviceDate: string;
 }
-import { generateEnterpriseDocument } from '@ralion/core';
-
 
 interface ExtendedFuneralCase extends FuneralCase {
   familyContact: string;
@@ -26,12 +26,11 @@ interface ExtendedFuneralCase extends FuneralCase {
   hearseAssigned?: string;
 }
 
-
-const sampleDovesCases: ExtendedFuneralCase[] = [
+const sampleRalionCases: ExtendedFuneralCase[] = [
   {
     id: 'f1',
-    orgId: 'doves-funeral-parlour',
-    createdBy: 'u-doves-admin',
+    orgId: 'ralion-funeral-parlour',
+    createdBy: 'u-ralion-admin',
     createdAt: '2026-07-24',
     updatedAt: '2026-07-24',
     caseNumber: 'FC-2026-088',
@@ -47,8 +46,8 @@ const sampleDovesCases: ExtendedFuneralCase[] = [
   },
   {
     id: 'f2',
-    orgId: 'doves-funeral-parlour',
-    createdBy: 'u-doves-admin',
+    orgId: 'ralion-funeral-parlour',
+    createdBy: 'u-ralion-admin',
     createdAt: '2026-07-22',
     updatedAt: '2026-07-22',
     caseNumber: 'FC-2026-087',
@@ -65,7 +64,7 @@ const sampleDovesCases: ExtendedFuneralCase[] = [
 ];
 
 export default function FuneralPluginPage() {
-  const [cases, setCases] = useState<ExtendedFuneralCase[]>(sampleDovesCases);
+  const [cases, setCases] = useState<ExtendedFuneralCase[]>(sampleRalionCases);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCase, setNewCase] = useState({
     deceasedName: '',
@@ -80,7 +79,7 @@ export default function FuneralPluginPage() {
     if (!newCase.deceasedName || !newCase.familyContact) return;
     const created: ExtendedFuneralCase = {
       id: `f-${Date.now()}`,
-      orgId: 'doves-funeral-parlour',
+      orgId: 'ralion-funeral-parlour',
       createdBy: 'u-admin',
       createdAt: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0],
@@ -103,7 +102,7 @@ export default function FuneralPluginPage() {
   const handleExportPDF = (c: ExtendedFuneralCase) => {
     const docRes = generateEnterpriseDocument({
       templateType: 'FUNERAL_CONTRACT',
-      orgName: 'Doves Funeral Parlour',
+      orgName: 'Ralion Funeral Services',
       clientName: c.familyContact,
       clientEmail: c.phone,
       items: [
@@ -128,13 +127,13 @@ export default function FuneralPluginPage() {
       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight text-white">Ralion Funeral</h1>
+            <h1 className="text-2xl font-black tracking-tight text-white">Ralion Funeral OS</h1>
             <Badge variant="primary" className="gap-1 font-mono">
-              <Shield className="w-3.5 h-3.5" /> Doves Funeral Demo (Build Prompt 5)
+              <Shield className="w-3.5 h-3.5" /> Ralion Industry Vertical
             </Badge>
           </div>
           <p className="text-xs text-zinc-400 mt-1">
-            Ralion Funeral — Empowered to Prosper: Supporting families with dignity and efficiency.
+            "Empowered to Prosper" — Professional Bereavement Operations & Fleet Dispatch.
           </p>
         </div>
 
@@ -151,7 +150,7 @@ export default function FuneralPluginPage() {
             <Shield className="w-4 h-4 text-blue-400" />
           </div>
           <div className="text-2xl font-bold text-white mt-2">{cases.length} Cases</div>
-          <p className="text-[10px] text-zinc-500 mt-1">Doves Funeral Parlour Registry</p>
+          <p className="text-[10px] text-zinc-500 mt-1">Ralion Funeral Registry</p>
         </Card>
 
         <Card className="p-4 bg-zinc-900 border-zinc-800">
@@ -160,7 +159,7 @@ export default function FuneralPluginPage() {
             <Truck className="w-4 h-4 text-purple-400" />
           </div>
           <div className="text-2xl font-bold text-purple-400 mt-2">2 Vehicles Active</div>
-          <p className="text-[10px] text-zinc-500 mt-1">Cadillac & Mercedes Fleet</p>
+          <p className="text-[10px] text-zinc-500 mt-1">Mercedes & Cadillac Fleet</p>
         </Card>
 
         <Card className="p-4 bg-zinc-900 border-zinc-800">
@@ -178,7 +177,7 @@ export default function FuneralPluginPage() {
       {/* Cases Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Doves Funeral Case Registry</CardTitle>
+          <CardTitle>Ralion Funeral Case Registry</CardTitle>
           <CardDescription>Bereavement cases, casket selection, and family payment status</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -198,23 +197,25 @@ export default function FuneralPluginPage() {
               </thead>
               <tbody className="divide-y divide-zinc-800/60">
                 {cases.map((c) => (
-                  <tr key={c.id} className="hover:bg-zinc-800/40 transition-colors">
+                  <tr key={c.id} className="hover:bg-zinc-800/40">
                     <td className="p-4 font-mono font-bold text-blue-400">{c.caseNumber}</td>
                     <td className="p-4 font-bold text-white">{c.deceasedName}</td>
-                    <td className="p-4 text-zinc-300">{c.familyContact} <br /><span className="text-[10px] font-mono text-zinc-500">{c.phone}</span></td>
-                    <td className="p-4 text-zinc-300">{c.casketSelected}</td>
-                    <td className="p-4 text-purple-400 font-mono text-[11px]">{c.hearseAssigned}</td>
-                    <td className="p-4 font-mono text-zinc-300">{c.serviceDate}</td>
                     <td className="p-4">
-                      <Badge variant={c.paymentStatus === 'PAID' ? 'success' : 'primary'}>{c.paymentStatus}</Badge>
+                      <div>{c.familyContact}</div>
+                      <div className="text-[10px] text-zinc-500">{c.phone}</div>
+                    </td>
+                    <td className="p-4">{c.casketSelected}</td>
+                    <td className="p-4 font-mono text-[11px] text-zinc-400">{c.hearseAssigned}</td>
+                    <td className="p-4 font-mono text-zinc-400">{c.serviceDate}</td>
+                    <td className="p-4">
+                      <Badge variant={c.paymentStatus === 'PAID' ? 'success' : c.paymentStatus === 'PARTIAL' ? 'warning' : 'danger'}>
+                        {c.paymentStatus} (${c.totalCost.toLocaleString()})
+                      </Badge>
                     </td>
                     <td className="p-4 text-right">
-                      <button
-                        onClick={() => handleExportPDF(c)}
-                        className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white flex items-center gap-1 ml-auto text-[11px]"
-                      >
-                        <Download className="w-3.5 h-3.5" /> PDF Contract
-                      </button>
+                      <Button variant="outline" size="sm" onClick={() => handleExportPDF(c)}>
+                        <Download className="w-3.5 h-3.5 mr-1" /> Export Contract
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -224,68 +225,94 @@ export default function FuneralPluginPage() {
         </CardContent>
       </Card>
 
-      {/* Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Doves Funeral Case Registration">
-        <div className="flex flex-col gap-4">
-          <div>
-            <label className="text-xs font-semibold text-zinc-300">Late Deceased Name</label>
-            <input
-              type="text"
-              value={newCase.deceasedName}
-              onChange={(e) => setNewCase({ ...newCase, deceasedName: e.target.value })}
-              placeholder="e.g. Late Kgosi Phiri"
-              className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Family Representative</label>
-              <input
-                type="text"
-                value={newCase.familyContact}
-                onChange={(e) => setNewCase({ ...newCase, familyContact: e.target.value })}
-                placeholder="e.g. Kagiso Phiri"
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
+      {/* Modal Form */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-lg bg-zinc-900 border-zinc-800 p-6 relative">
+            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-white mb-4">Create Ralion Funeral Case File</h2>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="block font-medium text-zinc-400 mb-1">Deceased Name</label>
+                <input
+                  type="text"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+                  value={newCase.deceasedName}
+                  onChange={(e) => setNewCase({ ...newCase, deceasedName: e.target.value })}
+                  placeholder="e.g. Late Kgosi Phiri"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium text-zinc-400 mb-1">Family Representative</label>
+                <input
+                  type="text"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+                  value={newCase.familyContact}
+                  onChange={(e) => setNewCase({ ...newCase, familyContact: e.target.value })}
+                  placeholder="e.g. Kagiso Phiri (Son)"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-medium text-zinc-400 mb-1">Contact Phone</label>
+                  <input
+                    type="text"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+                    value={newCase.phone}
+                    onChange={(e) => setNewCase({ ...newCase, phone: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-zinc-400 mb-1">Service Date</label>
+                  <input
+                    type="date"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+                    value={newCase.serviceDate}
+                    onChange={(e) => setNewCase({ ...newCase, serviceDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-medium text-zinc-400 mb-1">Casket Package</label>
+                <select
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+                  value={newCase.casketSelected}
+                  onChange={(e) => setNewCase({ ...newCase, casketSelected: e.target.value })}
+                >
+                  <option value="Oak Deluxe Executive Casket">Oak Deluxe Executive Casket ($35,000)</option>
+                  <option value="Mahogany Elite Casket">Mahogany Elite Casket ($42,000)</option>
+                  <option value="Standard Cedar Casket">Standard Cedar Casket ($18,000)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-medium text-zinc-400 mb-1">Total Contract Cost ($)</label>
+                <input
+                  type="number"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+                  value={newCase.totalCost}
+                  onChange={(e) => setNewCase({ ...newCase, totalCost: e.target.value })}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+                <Button variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" size="sm" onClick={handleCreateCase}>
+                  Create Case File
+                </Button>
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Phone</label>
-              <input
-                type="text"
-                value={newCase.phone}
-                onChange={(e) => setNewCase({ ...newCase, phone: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Service Date</label>
-              <input
-                type="date"
-                value={newCase.serviceDate}
-                onChange={(e) => setNewCase({ ...newCase, serviceDate: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-zinc-300">Package Cost ($)</label>
-              <input
-                type="number"
-                value={newCase.totalCost}
-                onChange={(e) => setNewCase({ ...newCase, totalCost: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-white"
-              />
-            </div>
-          </div>
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button variant="primary" size="sm" onClick={handleCreateCase} className="bg-blue-600 font-bold">
-              Save Funeral Case
-            </Button>
-          </div>
+          </Card>
         </div>
-      </Modal>
+      )}
     </div>
   );
 }
