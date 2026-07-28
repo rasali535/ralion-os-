@@ -47,7 +47,7 @@ export default function DeveloperPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">Developer Platform & APIs</h1>
-            <Badge variant="blue">SDK & REST API</Badge>
+            <Badge variant="primary">SDK & REST API</Badge>
           </div>
           <p className="text-xs text-zinc-400 mt-1">Manage API keys, configure webhooks, access documentation, and build custom integrations.</p>
         </div>

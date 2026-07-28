@@ -14,6 +14,24 @@ const os = require('os');
 const crypto = require('crypto');
 const Store = require('electron-store');
 
+let log = console;
+try {
+  log = require('electron-log');
+  if (log.transports && log.transports.file) {
+    log.transports.file.level = 'info';
+  }
+} catch (e) {
+  // fallback console
+}
+
+process.on('uncaughtException', (err) => {
+  log.error('[Uncaught Exception]', err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  log.error('[Unhandled Rejection]', reason);
+});
+
 let mainWindow = null;
 let tray = null;
 const store = new Store();
@@ -22,12 +40,10 @@ const RALION_API = process.env.RALION_API_URL || 'https://ralion.rasalilabs.com'
 const OFFLINE_GRACE_DAYS = 7;
 
 let autoUpdater = null;
-let log = console;
 try {
-  log = require('electron-log');
   const updaterModule = require('electron-updater');
   autoUpdater = updaterModule.autoUpdater;
-  if (autoUpdater) autoUpdater.logger = log;
+  if (autoUpdater && log.info) autoUpdater.logger = log;
 } catch (e) {
   // fallback console
 }
@@ -56,6 +72,7 @@ async function validateLicense(key) {
     store.set('lastLicenseCheck', Date.now());
     return data;
   } catch (err) {
+    if (log.warn) log.warn('[License] Offline check...', err.message);
     const lastCheck = store.get('lastLicenseCheck') || 0;
     const daysSinceCheck = (Date.now() - lastCheck) / (1000 * 60 * 60 * 24);
 
@@ -91,12 +108,27 @@ function createWindow() {
     },
   });
 
-  const isProd = process.env.NODE_ENV === 'production';
-  const appUrl = isProd
-    ? 'https://app.rasalilabs.com'
-    : (process.env.ELECTRON_START_URL || 'http://localhost:3000');
+  const isPackaged = app.isPackaged || process.env.NODE_ENV === 'production';
 
-  mainWindow.loadURL(appUrl);
+  if (!isPackaged) {
+    const devUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
+    log.info('[Renderer] Loading Dev Server:', devUrl);
+    mainWindow.loadURL(devUrl).catch(err => log.error('[Renderer Load Failure]', err));
+  } else {
+    const indexPath = path.join(__dirname, 'renderer', 'index.html');
+    log.info('[Renderer] Loading Local Bundled HTML:', indexPath);
+    mainWindow.loadFile(indexPath).catch(err => {
+      log.error('[Renderer Load Failure] Local index.html missing:', indexPath, err);
+    });
+  }
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    log.error(`[Renderer Did Fail Load] ${errorCode} - ${errorDescription} (${validatedURL})`);
+  });
+
+  mainWindow.webContents.on('render-process-gone', (event, details) => {
+    log.error(`[Renderer Process Crashed] Reason: ${details.reason}, Exit Code: ${details.exitCode}`);
+  });
 
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow?.webContents.executeJavaScript(
@@ -164,7 +196,7 @@ function setupAutoUpdater() {
     setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 5000);
     setInterval(() => autoUpdater.checkForUpdatesAndNotify(), 4 * 60 * 60 * 1000);
   } catch (e) {
-    // console log
+    log.error('[AutoUpdater Error]', e);
   }
 }
 
@@ -244,6 +276,7 @@ function registerIpcHandlers() {
       }
       return data;
     } catch (err) {
+      log.error('[IPC Activate Error]', err);
       return { success: false, error: err.message };
     }
   });
@@ -261,6 +294,7 @@ function registerIpcHandlers() {
       store.delete('licenseKey');
       return res.json();
     } catch (err) {
+      log.error('[IPC Deactivate Error]', err);
       return { success: false, error: err.message };
     }
   });

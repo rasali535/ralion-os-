@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// POST /api/releases/upload — Admin endpoint to create & publish a new release
+export const dynamic = 'force-static';
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
 
-    // Verify admin authentication
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,7 +19,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required release fields' }, { status: 400 });
     }
 
-    // If marked as latest, unmark existing latest releases for this platform
     if (isLatest) {
       await supabase
         .from('releases')
@@ -27,7 +26,6 @@ export async function POST(request: Request) {
         .eq('platform', platform);
     }
 
-    // Insert new release record
     const { data: release, error } = await supabase
       .from('releases')
       .insert({

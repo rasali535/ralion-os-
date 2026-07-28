@@ -11,9 +11,10 @@ export function evaluateWorkflowConditions(
   payload: WorkflowEventPayload
 ): boolean {
   if (!rule.isActive) return false;
-  if (rule.trigger.event !== payload.event) return false;
+  const triggerEvent = rule.trigger?.event || rule.triggerEvent;
+  if (triggerEvent !== payload.event) return false;
 
-  const conditions = rule.trigger.conditions;
+  const conditions = rule.trigger?.conditions;
   if (!conditions || Object.keys(conditions).length === 0) return true;
 
   for (const [key, value] of Object.entries(conditions)) {

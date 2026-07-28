@@ -3,8 +3,20 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Modal } from '@ralion/ui';
 import { Users, Plus, Search, Filter, Phone, Mail, DollarSign, Calendar, MessageSquare, Sparkles, X, Clock, FileText, ChevronRight } from 'lucide-react';
-import { DEAL_STAGE_PROBABILITIES } from '@ralion/core';
-import { DealStage } from '@ralion/database';
+type DealStage = 'LEAD' | 'CONTACTED' | 'PROSPECT' | 'QUALIFIED' | 'PROPOSAL' | 'NEGOTIATION' | 'WON' | 'LOST' | 'CLOSED_WON' | 'CLOSED_LOST';
+const DEAL_STAGE_PROBABILITIES: Record<string, number> = {
+  LEAD: 10,
+  CONTACTED: 25,
+  PROSPECT: 35,
+  QUALIFIED: 50,
+  PROPOSAL: 75,
+  NEGOTIATION: 90,
+  WON: 100,
+  CLOSED_WON: 100,
+  LOST: 0,
+  CLOSED_LOST: 0,
+};
+
 
 interface ContactItem {
   id: string;

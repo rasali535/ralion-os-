@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-static';
+
 // GET /api/releases/latest?platform=windows
 export async function GET(request: Request) {
   try {
@@ -20,7 +22,6 @@ export async function GET(request: Request) {
       .single();
 
     if (error || !release) {
-      // Fallback response for v2.4.2
       return NextResponse.json({
         version: '2.4.2',
         platform: platform,

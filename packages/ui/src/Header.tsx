@@ -6,7 +6,10 @@ import { Badge } from './Badge';
 export interface HeaderProps {
   userName?: string;
   userRole?: string;
+  user?: { name: string; role: string; email?: string };
+  orgName?: string;
   activeBranch?: string;
+  unreadNotifications?: number;
   onOpenSearch?: () => void;
   onOpenMariAI?: () => void;
   onLogout?: () => void;
@@ -15,11 +18,17 @@ export interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   userName = "Ras Ali Admin",
   userRole = "ORGANIZATION_OWNER",
+  user,
+  orgName,
   activeBranch = "Main Branch",
+  unreadNotifications,
   onOpenSearch,
   onOpenMariAI,
   onLogout
 }) => {
+  const displayName = user?.name || userName;
+  const displayRole = user?.role || userRole;
+
   return (
     <header className="h-16 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl px-6 flex items-center justify-between sticky top-0 z-30">
       {/* Search Input Bar */}

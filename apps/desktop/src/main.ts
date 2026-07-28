@@ -14,6 +14,25 @@ import * as os from 'os';
 import * as crypto from 'crypto';
 import Store from 'electron-store';
 
+// Safely attempt electron-log require
+let log: any = console;
+try {
+  log = require('electron-log');
+  if (log.transports && log.transports.file) {
+    log.transports.file.level = 'info';
+  }
+} catch (e) {
+  // fallback to console
+}
+
+process.on('uncaughtException', (err) => {
+  log.error('[Uncaught Exception]', err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  log.error('[Unhandled Rejection]', reason);
+});
+
 // ─── Globals ───────────────────────────────────────────────────────────────────
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -28,19 +47,16 @@ const store = new Store<{
 const RALION_API = process.env.RALION_API_URL || 'https://ralion.rasalilabs.com';
 const OFFLINE_GRACE_DAYS = 7;
 
-// Safely attempt electron-updater & log require if present
 let autoUpdater: any = null;
-let log: any = console;
 try {
-  log = require('electron-log');
   const updaterModule = require('electron-updater');
   autoUpdater = updaterModule.autoUpdater;
-  if (autoUpdater) autoUpdater.logger = log;
+  if (autoUpdater && log.info) autoUpdater.logger = log;
 } catch (e) {
-  // Fallback to standard console logger if updater not present
+  // fallback console
 }
 
-// ─── Hardware Device ID ─────────────────────────────────────────────────────────
+// ─── Device & License Utilities ───────────────────────────────────────────────
 function getDeviceId(): string {
   const cached = store.get('deviceId');
   if (cached) return cached;
@@ -51,15 +67,7 @@ function getDeviceId(): string {
   return id;
 }
 
-// ─── License Validation ─────────────────────────────────────────────────────────
-async function validateLicense(key: string): Promise<{
-  valid: boolean;
-  edition?: string;
-  orgName?: string;
-  expiresAt?: string;
-  features?: string[];
-  error?: string;
-}> {
+async function validateLicense(key: string): Promise<{ valid: boolean; edition?: string; orgName?: string; error?: string }> {
   try {
     const deviceId = getDeviceId();
     const res = await fetch(`${RALION_API}/api/license/check`, {
@@ -69,9 +77,7 @@ async function validateLicense(key: string): Promise<{
     });
 
     if (!res.ok) throw new Error(`Server returned ${res.status}`);
-    const data: any = await res.json();
-
-    // Cache successful validation timestamp
+    const data = (await res.json()) as any;
     store.set('lastLicenseCheck', Date.now());
     return data;
   } catch (err: any) {
@@ -114,14 +120,33 @@ function createWindow() {
     },
   });
 
-  const isProd = process.env.NODE_ENV === 'production';
-  const appUrl = isProd
-    ? 'https://app.rasalilabs.com'
-    : (process.env.ELECTRON_START_URL || 'http://localhost:3000');
+  const isPackaged = app.isPackaged || process.env.NODE_ENV === 'production';
 
-  mainWindow.loadURL(appUrl);
+  if (!isPackaged) {
+    const devUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
+    log.info('[Renderer] Loading Development Server URL:', devUrl);
+    mainWindow.loadURL(devUrl).catch(err => {
+      log.error('[Renderer Load Failure]', err);
+    });
+  } else {
+    // Load local bundled static Next.js export in dist/renderer/index.html
+    const indexPath = path.join(__dirname, 'renderer', 'index.html');
+    log.info('[Renderer] Loading Local Bundled HTML:', indexPath);
+    mainWindow.loadFile(indexPath).catch(err => {
+      log.error('[Renderer Load Failure] Local index.html missing or unreadable:', indexPath, err);
+    });
+  }
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    log.error(`[Renderer Did Fail Load] Code: ${errorCode}, Error: ${errorDescription}, URL: ${validatedURL}`);
+  });
+
+  mainWindow.webContents.on('render-process-gone', (event, details) => {
+    log.error(`[Renderer Process Crashed] Reason: ${details.reason}, Exit Code: ${details.exitCode}`);
+  });
 
   mainWindow.webContents.on('did-finish-load', () => {
+    log.info('[Renderer] Page finish loading cleanly');
     mainWindow?.webContents.executeJavaScript(
       `window.__RALION_DESKTOP__ = true; window.__RALION_VERSION__ = '${app.getVersion()}';`
     );
@@ -132,7 +157,9 @@ function createWindow() {
     return { action: 'deny' };
   });
 
-  mainWindow.on('closed', () => { mainWindow = null; });
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 
   setupAutoUpdater();
 }
@@ -156,7 +183,7 @@ function createTray() {
   tray.on('double-click', () => { mainWindow?.show(); mainWindow?.focus(); });
 }
 
-// ─── Auto Updater ──────────────────────────────────────────────────────────────
+// ─── Auto Updater ─────────────────────────────────────────────────────────────
 function setupAutoUpdater() {
   if (!autoUpdater) return;
 
@@ -167,7 +194,7 @@ function setupAutoUpdater() {
     });
 
     autoUpdater.on('update-available', (info: any) => {
-      if (log.info) log.info('[Updater] Update available:', info?.version);
+      log.info('[AutoUpdater] Update available:', info?.version);
       if (Notification.isSupported()) {
         new Notification({
           title: 'Ralion Update Available',
@@ -177,28 +204,29 @@ function setupAutoUpdater() {
     });
 
     autoUpdater.on('update-downloaded', (info: any) => {
-      dialog.showMessageBox(mainWindow!, {
-        type: 'info',
-        title: 'Update Ready',
-        message: `Ralion ${info?.version} is ready to install. Restart now?`,
-        buttons: ['Restart Now', 'Later'],
-      }).then(({ response }) => {
-        if (response === 0) autoUpdater.quitAndInstall();
-      });
+      log.info('[AutoUpdater] Update downloaded:', info?.version);
+      if (mainWindow) {
+        dialog.showMessageBox(mainWindow, {
+          type: 'info',
+          title: 'Update Ready',
+          message: `Ralion ${info?.version} is ready to install. Restart now?`,
+          buttons: ['Restart Now', 'Later'],
+        }).then(({ response }) => {
+          if (response === 0) autoUpdater.quitAndInstall();
+        });
+      }
     });
-
-    autoUpdater.on('error', (err: any) => { if (log.error) log.error('[Updater] Error:', err); });
 
     setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 5000);
     setInterval(() => autoUpdater.checkForUpdatesAndNotify(), 4 * 60 * 60 * 1000);
   } catch (e) {
-    if (log.error) log.error('[Updater] Setup failed:', e);
+    log.error('[AutoUpdater Error]', e);
   }
 }
 
-// ─── Application Menu ──────────────────────────────────────────────────────────
+// ─── App Menu ─────────────────────────────────────────────────────────────────
 function buildAppMenu() {
-  const template: Electron.MenuItemConstructorOptions[] = [
+  const template: any[] = [
     {
       label: 'Ralion',
       submenu: [
@@ -252,9 +280,7 @@ function registerIpcHandlers() {
     hostname: os.hostname(),
   }));
 
-  ipcMain.handle('validate-license', async (_, key: string) => {
-    return validateLicense(key);
-  });
+  ipcMain.handle('validate-license', async (_, key: string) => validateLicense(key));
 
   ipcMain.handle('activate-license', async (_, key: string) => {
     try {
@@ -269,13 +295,14 @@ function registerIpcHandlers() {
           platform: process.platform,
         }),
       });
-      const data: any = await res.json();
-      if (data.success) {
+      const data = (await res.json()) as any;
+      if (data && data.success) {
         store.set('licenseKey', key);
         store.set('lastLicenseCheck', Date.now());
       }
       return data;
     } catch (err: any) {
+      log.error('[IPC Activate License Error]', err.message);
       return { success: false, error: err.message };
     }
   });
@@ -293,6 +320,7 @@ function registerIpcHandlers() {
       store.delete('licenseKey');
       return res.json();
     } catch (err: any) {
+      log.error('[IPC Deactivate License Error]', err.message);
       return { success: false, error: err.message };
     }
   });
@@ -315,9 +343,7 @@ function registerIpcHandlers() {
     return { queued: true, total: pending.length };
   });
 
-  ipcMain.handle('get-pending-actions', () => {
-    return store.get('offlinePendingActions') || [];
-  });
+  ipcMain.handle('get-pending-actions', () => store.get('offlinePendingActions') || []);
 
   ipcMain.handle('clear-synced-actions', (_, syncedIds: string[]) => {
     const pending = (store.get('offlinePendingActions') || []).filter(
@@ -338,9 +364,10 @@ function registerIpcHandlers() {
   ipcMain.handle('open-external', (_, url: string) => shell.openExternal(url));
 }
 
-// ─── App Lifecycle ─────────────────────────────────────────────────────────────
+// ─── Single Instance & Lifecycle ───────────────────────────────────────────────
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
+  log.info('[App] Second instance attempt. Quitting...');
   app.quit();
 } else {
   app.on('second-instance', () => {
@@ -351,7 +378,7 @@ if (!gotLock) {
   });
 
   app.whenReady().then(() => {
-    if (log.info) log.info(`[Ralion Desktop] Starting v${app.getVersion()} on ${process.platform}`);
+    log.info('[App] Ralion Desktop app ready. Initializing window & IPC...');
     registerIpcHandlers();
     buildAppMenu();
     createTray();
@@ -363,6 +390,7 @@ if (!gotLock) {
   });
 
   app.on('window-all-closed', () => {
+    log.info('[App] All windows closed.');
     if (process.platform !== 'darwin') app.quit();
   });
 }

@@ -3,15 +3,29 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Modal } from '@ralion/ui';
 import { Shield, Plus, FileText, Calendar, Truck, DollarSign, UserCheck, Download, Sparkles, X } from 'lucide-react';
-import { FuneralCase } from '@ralion/database';
+interface FuneralCase {
+  id: string;
+  orgId: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  caseNumber: string;
+  deceasedName: string;
+  status: string;
+  serviceDate: string;
+}
 import { generateEnterpriseDocument } from '@ralion/core';
+
 
 interface ExtendedFuneralCase extends FuneralCase {
   familyContact: string;
   phone: string;
   paymentStatus: 'PAID' | 'PARTIAL' | 'PENDING';
   totalCost: number;
+  casketSelected?: string;
+  hearseAssigned?: string;
 }
+
 
 const sampleDovesCases: ExtendedFuneralCase[] = [
   {

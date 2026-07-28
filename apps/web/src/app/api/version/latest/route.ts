@@ -1,53 +1,17 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 
-// GET /api/version/latest — Returns the latest app version & download URLs
+export const dynamic = 'force-static';
+
 export async function GET() {
-  try {
-    const supabase = await createClient();
-
-    const { data: releases } = await supabase
-      .from('download_releases')
-      .select('*')
-      .eq('is_latest', true)
-      .order('released_at', { ascending: false });
-
-    if (!releases || releases.length === 0) {
-      // Fallback version info
-      return NextResponse.json({
-        version: '1.0.0',
-        releaseDate: '2026-07-28',
-        releaseNotes: 'Initial release of Ralion Desktop — Empowered to Prosper',
-        downloads: {
-          windows: { url: null, size: null, checksum: null },
-          macos: { url: null, size: null, checksum: null },
-          linux: { url: null, size: null, checksum: null },
-        },
-      });
+  return NextResponse.json({
+    version: '2.4.2',
+    name: 'Ralion Platform',
+    releaseDate: '2026-07-28',
+    changelog: 'Production Windows PE x64 NSIS release with Mari AI intelligence engine, multi-agent advisory, SaaS monetization, and industry modules.',
+    downloads: {
+      windows: 'https://yidsfihagwttlmhfynmf.supabase.co/storage/v1/object/public/ralion-releases/windows/2.4.2/ralion-desktop-2.4.2-setup.exe',
+      mac: 'https://ralion.rasalilabs.com/downloads/mac/v2.4.2',
+      linux: 'https://ralion.rasalilabs.com/downloads/linux/v2.4.2'
     }
-
-    // Build response grouped by platform
-    const byPlatform: Record<string, any> = {};
-    for (const r of releases) {
-      byPlatform[r.platform] = {
-        url: r.download_url,
-        size: r.file_size_mb ? `${r.file_size_mb} MB` : null,
-        checksum: r.checksum,
-        version: r.version,
-      };
-    }
-
-    return NextResponse.json({
-      version: releases[0]?.version || '1.0.0',
-      releaseDate: releases[0]?.released_at,
-      releaseNotes: releases[0]?.release_notes,
-      downloads: {
-        windows: byPlatform['windows'] || null,
-        macos: byPlatform['macos'] || null,
-        linux: byPlatform['linux'] || null,
-      },
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
+  });
 }
