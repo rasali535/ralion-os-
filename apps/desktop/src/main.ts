@@ -33,6 +33,11 @@ process.on('unhandledRejection', (reason) => {
   log.error('[Unhandled Rejection]', reason);
 });
 
+// Enforce NODE_ENV=production when packaged
+if (app.isPackaged) {
+  process.env.NODE_ENV = 'production';
+}
+
 // ─── Globals ───────────────────────────────────────────────────────────────────
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -44,7 +49,7 @@ const store = new Store<{
   offlinePendingActions: any[];
 }>();
 
-const RALION_API = process.env.RALION_API_URL || 'https://ralion.rasalilabs.com';
+const RALION_API = process.env.RALION_API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://rasalilabs.com';
 const OFFLINE_GRACE_DAYS = 7;
 
 let autoUpdater: any = null;
@@ -137,8 +142,11 @@ function createWindow() {
     });
   }
 
+  // Diagnostics: fail load logging
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-    log.error(`[Renderer Did Fail Load] Code: ${errorCode}, Error: ${errorDescription}, URL: ${validatedURL}`);
+    const failLog = `[Renderer Did Fail Load] Attempted URL: ${validatedURL}, Error Code: ${errorCode}, Description: ${errorDescription}`;
+    console.error(failLog);
+    log.error(failLog);
   });
 
   mainWindow.webContents.on('render-process-gone', (event, details) => {
@@ -146,7 +154,7 @@ function createWindow() {
   });
 
   mainWindow.webContents.on('did-finish-load', () => {
-    log.info('[Renderer] Page finish loading cleanly');
+    log.info('[Renderer] Page finished loading cleanly');
     mainWindow?.webContents.executeJavaScript(
       `window.__RALION_DESKTOP__ = true; window.__RALION_VERSION__ = '${app.getVersion()}';`
     );
@@ -193,6 +201,10 @@ function setupAutoUpdater() {
       url: `${RALION_API}/api/version/releases`,
     });
 
+    autoUpdater.on('error', (err: any) => {
+      if (log.warn) log.warn('[AutoUpdater Warning - Offline or Unreachable]', err?.message || err);
+    });
+
     autoUpdater.on('update-available', (info: any) => {
       log.info('[AutoUpdater] Update available:', info?.version);
       if (Notification.isSupported()) {
@@ -217,10 +229,15 @@ function setupAutoUpdater() {
       }
     });
 
-    setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 5000);
-    setInterval(() => autoUpdater.checkForUpdatesAndNotify(), 4 * 60 * 60 * 1000);
-  } catch (e) {
-    log.error('[AutoUpdater Error]', e);
+    setTimeout(() => {
+      try {
+        autoUpdater.checkForUpdatesAndNotify();
+      } catch (e: any) {
+        log.warn('[AutoUpdater Check Warning]', e?.message || e);
+      }
+    }, 5000);
+  } catch (e: any) {
+    log.warn('[AutoUpdater Setup Warning]', e?.message || e);
   }
 }
 
@@ -359,7 +376,15 @@ function registerIpcHandlers() {
     }
   });
 
-  ipcMain.handle('check-updates', () => { if (autoUpdater) autoUpdater.checkForUpdatesAndNotify(); });
+  ipcMain.handle('check-updates', () => {
+    if (autoUpdater) {
+      try {
+        autoUpdater.checkForUpdatesAndNotify();
+      } catch (e: any) {
+        log.warn('[AutoUpdater Manual Check Warning]', e?.message || e);
+      }
+    }
+  });
 
   ipcMain.handle('open-external', (_, url: string) => shell.openExternal(url));
 }

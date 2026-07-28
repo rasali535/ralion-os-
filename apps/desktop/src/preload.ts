@@ -1,5 +1,16 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+// Production diagnostics error handlers
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (event) => {
+    console.error('[Renderer Diagnostics Error]', event.message, event.filename, event.lineno, event.error);
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('[Renderer Unhandled Rejection]', event.reason);
+  });
+}
+
 // Expose a secure, typed API to the renderer (Next.js web app)
 // All calls go through IPC — no direct Node.js access from renderer
 contextBridge.exposeInMainWorld('ralionDesktop', {
