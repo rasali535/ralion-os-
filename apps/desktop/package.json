@@ -12,47 +12,12 @@
   "scripts": {
     "dev": "tsc && electron dist/main.js",
     "build": "tsc",
-    "pack": "electron-builder --dir --x64",
-    "dist:win": "electron-builder --win nsis --x64",
-    "dist:mac": "electron-builder --mac",
-    "dist:linux": "electron-builder --linux",
-    "dist:all": "electron-builder --win --mac --linux"
-  },
-  "build": {
-    "appId": "com.rasalilabs.ralion",
-    "productName": "Ralion",
-    "copyright": "Copyright © 2026 Ras Ali Labs",
-    "directories": {
-      "output": "release",
-      "buildResources": "assets"
-    },
-    "files": [
-      "dist/**/*",
-      "node_modules/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "assets/icon.ico",
-      "publisherName": "Ras Ali Labs",
-      "artifactName": "ralion-desktop-${version}-setup.${ext}"
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Ralion",
-      "artifactName": "ralion-desktop-${version}-setup.${ext}"
-    }
+    "pack": "electron-builder --dir --x64 --config electron-builder.yml",
+    "dist:win": "electron-builder --win nsis --x64 --config electron-builder.yml",
+    "dist:mac": "electron-builder --mac --config electron-builder.yml",
+    "dist:linux": "electron-builder --linux --config electron-builder.yml",
+    "dist:all": "electron-builder --win --mac --linux --config electron-builder.yml",
+    "validate": "node scripts/validate-installer.js"
   },
   "dependencies": {
     "electron-store": "^8.2.0",
