@@ -169,7 +169,9 @@ function createWindow() {
     mainWindow = null;
   });
 
-  setupAutoUpdater();
+  if (app.isPackaged && process.env.ENABLE_AUTO_UPDATE === 'true') {
+    setupAutoUpdater();
+  }
 }
 
 // ─── System Tray ───────────────────────────────────────────────────────────────
